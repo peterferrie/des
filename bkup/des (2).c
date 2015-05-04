@@ -310,6 +310,7 @@ void des_enc(void *out, const void *in, const void *key){
 	
 	permute((uint8_t*)ip_permtab, (uint8_t*)in, data.v8);
 	permute((uint8_t*)pc1_permtab, (const uint8_t*)key, k);
+  
 	for(i=0; i<8; ++i){
 		shiftkey(k);
 		if(ROTTABLE&((1<<((i<<1)+0))) )
