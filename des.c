@@ -158,23 +158,31 @@ uint8_t shiftkeyinv_permtab[] = {
 	52, 53, 54, 55
 };
 
-#define ROTTABLE      0x7EFC 
-#define ROTTABLE_INV  0x3F7E
+void str2key (void *str, des_blk* key) {
+  uint32_t x1, r1, *p1;
+  des_blk *s=(des_blk*)str;
+  int i, j;
 
-#define DES_ENCRYPT 0
-#define DES_DECRYPT 1
+  for (i=0; i<2; i++) {
+    p1=(uint32_t*)&s->v8[i*3];
+    x1=SWAP32(*p1);
+    if (i==1) {
+      x1=ROL32 (x1, 4);
+    }
+    r1=0;
+    for (j=0; j<4; j++) {
+      r1 = ROL32((r1 | (x1 & 0xFE000000)), 8);
+      x1 <<= 7;
+    }
+    key->v32[i] = SWAP32(r1);
+  }
+}
 
-#define R (data.v32[1])
-#define L (data.v32[0])
 /******************************************************************************/
-void permutex (void *ptable, void *input, void *output);
-
-void permute (void *ptable, void *input, void *output) {
+void permute (uint8_t ptbl[], void *input, des_blk *out) {
 	uint8_t ob;
 	uint8_t byte, bit, x, t;
-  uint8_t *p=(uint8_t*)ptable;
-  uint8_t *in=(uint8_t*)input;
-  uint8_t *out=(uint8_t*)output;
+  uint8_t *p=ptbl, *in=(uint8_t*)input;
   
 	ob = p[1];
 	p  = &p[2];
@@ -182,49 +190,36 @@ void permute (void *ptable, void *input, void *output) {
 	for (byte=0; byte<ob; ++byte) {
 		t=0;
 		for (bit=0; bit<8; ++bit) {
-			x = *p++ -1;
+			x = *p++ - 1;
 		  t <<= 1;
 			if ((in[x / 8]) & (0x80 >> (x % 8)) ){
 				t |= 0x01;
 			}
 		}
-		out[byte]=t;
+		out->v8[byte]=t;
 	}
 }
 
 /******************************************************************************/
-
-void changeendian32(uint32_t * a) {
-	*a = (*a & 0x000000FF) << 24 |
-		 (*a & 0x0000FF00) <<  8 |
-		 (*a & 0x00FF0000) >>  8 |
-		 (*a & 0xFF000000) >> 24;
+void shiftkey (des_blk *key_in, int type) {
+	des_blk tmp_key;
+  
+	memcpy (tmp_key.v8, key_in->v8, 7);
+  
+  if (type==DES_ENCRYPT) {
+    permute (shiftkey_permtab, &tmp_key, key_in);
+  } else {
+    permute (shiftkeyinv_permtab, &tmp_key, key_in);
+  }    
 }
 
 /******************************************************************************/
-void shiftkey (uint8_t *key) {
-	uint8_t k[7];
+void splitin6bitwords (des_blk *x) {
+  des_blk t;
   
-	memcpy (k, key, 7);
-	permute (shiftkey_permtab, k, key);	
-}
-
-/******************************************************************************/
-void shiftkey_inv (uint8_t *key) {
-	uint8_t k[7];
+	t.v64 = x->v64 & 0x0000ffffffffffffLL;
   
-	memcpy (k, key, 7);
-	permute (shiftkeyinv_permtab, k, key);
-	
-}
-
-/******************************************************************************/
-uint64_t splitin6bitwords (uint64_t a) {
-	uint64_t ret=0;
-	a &= 0x0000ffffffffffffLL;
-  
-	permute (splitin6bitword_permtab, &a, &ret);	
-	return ret;
+	permute (splitin6bitword_permtab, &t, x);
 }
 
 /******************************************************************************/
@@ -233,128 +228,217 @@ uint8_t substitute (uint8_t a, uint8_t *sbp) {
   
 	x = sbp[a >> 1];
 	x = (a & 1) ? x & 0x0F : x >> 4;
+  
 	return x;
-	
 }
 
 /******************************************************************************/
 
-uint32_t des_f (uint32_t r, uint8_t *kr){
+void des_f (des_blk *data_in, des_blk *key) {
 	uint8_t  i, x;
-	uint32_t t=0,ret;
-	uint64_t data=0;
-	uint8_t *sbp, *p=(uint8_t*)&data;
+	uint32_t t=0, L, R;
+	uint8_t *sbp;
+  des_blk tmp_data, tmp_key, res;
 	
-  permute (e_permtab, &r, &data);
+  // load data
+  L=data_in->v32[0];
+  R=data_in->v32[1];
   
-	for (i=0; i<7; ++i)
-		((uint8_t*)&data)[i] ^= kr[i];
+  // permute 1 half of data
+  permute (e_permtab, &R, &tmp_data);
+  
+  // permute key
+  permute (pc2_permtab, key, &tmp_key);
+  
+  // mix key with data
+	for (i=0; i<7; i++)
+		tmp_data.v8[i] ^= tmp_key.v8[i];
 	
-	/* Sbox substitution */
-	data = splitin6bitwords (data);
+  // split data into 6bit words
+	splitin6bitwords (&tmp_data);
 	sbp=sbox;
   
 	for(i=0; i<8; ++i) {
-		x = substitute (((uint8_t*)&data)[i], sbp);
+		x = substitute (tmp_data.v8[i], sbp);
 		t <<= 4;
 		t |= x;
 		sbp += 32;
 	}
-	changeendian32 (&t);
-		
-	permute (p_permtab, &t, &ret);
+	t=SWAP32(t);
 
-	return ret;
+	permute (p_permtab, &t, &res);
+  
+  // xor
+  L ^= res.v32[0];
+  
+  // save swapped
+  data_in->v32[1]=L;
+  data_in->v32[0]=R;
 }
 
 // perform initial permutation on input
 // perform permuted choice 1 on key
-void start_enc (void *data_in, DES_DATA *data_out, void *key_in, uint8_t *key_out)
+void start_enc (void *data_in, des_blk *data_out, void *key_in, des_blk *key_out)
 {
-  permute (ip_permtab, data_in, data_out->v8);
+  permute (ip_permtab, data_in, data_out);
 	permute (pc1_permtab, key_in, key_out);
 }
 
 // perform final permutation
-void end_enc (void *data_out, DES_DATA *data_in)
+void end_enc (des_blk *data_out, des_blk *data_in)
 {
-  #define Rx data_in->v32[1]
-  #define Lx data_in->v32[0]
+  uint32_t L, R;
   
-	/* L <-> R*/
-	Rx ^= Lx;
-	Lx ^= Rx;
-	Rx ^= Lx;
+  L=data_in->v32[0];
+  R=data_in->v32[1];
   
-	permute (inv_ip_permtab, data_in->v8, data_out);
+	R ^= L;
+	L ^= R;
+	R ^= L;
+  
+  data_in->v32[0]=L;
+  data_in->v32[1]=R;
+  
+	permute (inv_ip_permtab, data_in, data_out);
 }
 /******************************************************************************/ 
 
-void update_key (uint8_t *key, uint8_t rnd_idx)
+void update_key (des_blk *key, uint8_t rnd_idx, int type)
 {
-  shiftkey (key);
+  shiftkey (key, type);
 
   if (ROTTABLE & (1 << rnd_idx)) {
-    shiftkey (key);
+    shiftkey (key, type);
   }
-}
-
-void des_rnd (DES_DATA *data_in, uint8_t *key)
-{
-  uint8_t kr[8];
-  uint32_t x;
-  
-  permute (pc2_permtab, key, kr);
-  Lx ^= des_f (Rx, kr);
-  x=Lx; Lx=Rx; Rx=x;
-}   
+}  
 
 void des_enc (void *ct, void *pt, void *key) {
-	uint8_t  tmp_key[8];
-  DES_DATA tmp_data;
+  des_blk tmp_data, tmp_key;
 	uint8_t  i;
   
-  start_enc (pt, &tmp_data, key, tmp_key);
+  start_enc (pt, &tmp_data, key, &tmp_key);
   
 	for (i=0; i<16; i++) {
-    update_key (tmp_key, i);
-    des_rnd (&tmp_data, tmp_key);
+    update_key (&tmp_key, i, DES_ENCRYPT);
+    des_f (&tmp_data, &tmp_key);
 	}
   end_enc (ct, &tmp_data);
 }
 
 /******************************************************************************/
 
-void des_dec (void *pt, void *ct, uint8_t *key) {
-	uint8_t  tmp_key[8];
-  DES_DATA tmp_data;
+void des_dec (void *pt, void *ct, void *key) {
+  des_blk tmp_data, tmp_key;
 	uint8_t  i;
   
-	start_enc (ct, &tmp_data, key, tmp_key);
+	start_enc (ct, &tmp_data, key, &tmp_key);
   
 	for (i=15; i>=0; --i) {
-    des_rnd (&tmp_data, tmp_key);
-    update_key (tmp_key, i);
+    des_f (&tmp_data, &tmp_key);
+    update_key (&tmp_key, i, DES_DECRYPT);
 	}
   end_enc (pt, &tmp_data);
 }
 
-/******************************************************************************/
-
-void tdes_enc (void *out, void *in, void *key) {
-	des_enc (out,  in, (uint8_t*)key + 0);
-	des_dec (out, out, (uint8_t*)key + 8);
-	des_enc (out, out, (uint8_t*)key +16);
+// perform Triple-DES encryption
+void des3_enc (void *out, void *in, 
+  void *key1, void *key2, void *key3)
+{
+  uint8_t c1[8], c2[8];
+  
+  des_enc (c1, in, key1);
+  des_dec (c2, c1, key2);
+  des_enc (out, c2, key3);
 }
 
+// perform Triple-DES decryption
+void des3_dec (void *out, void *in, 
+  void *key1, void *key2, void *key3)
+{
+  uint8_t c1[8], c2[8];
+  
+  des_dec (c1, in, key3);
+  des_enc (c2, c1, key2);
+  des_dec (out, c2, key1);
+}
 /******************************************************************************/
 
-void tdes_dec (void *out, void *in, void *key) {
-	des_dec (out,  in, (uint8_t*)key +16);
-	des_enc (out, out, (uint8_t*)key + 8);
-	des_dec (out, out, (uint8_t*)key + 0);
+// xor dst blk by src
+void blkxor (des_blk *dst, des_blk *src)
+{
+  uint8_t i;
+
+  for (i=0; i<DES_BLK_LEN; i++) {
+    dst->v8[i] ^= src->v8[i];
+  }
 }
 
-/******************************************************************************/
+// copy src blk to dst
+void blkcpy (des_blk *dst, des_blk *src)
+{
+  uint8_t i;
 
+  for (i=0; i<DES_BLK_LEN; i++) {
+    dst->v8[i] = src->v8[i];
+  }
+}
+
+// clear block
+void blkclr (des_blk *blk)
+{
+  uint8_t i;
+
+  for (i=0; i<DES_BLK_LEN; i++) {
+    blk->v8[i] = 0;
+  }
+}
+
+// perform encryption in CBC mode
+void des_cbc_enc (void *data_out, void *data_in, 
+  uint32_t len, des_blk *iv, void *key)
+{
+  des_blk t;
+  des_blk *in=(des_blk*)data_in;
+  des_blk *out=(des_blk*)data_out;
+  int r;
+  
+  // encrypt 64-bit blocks
+  do {
+    // clear t
+    blkclr (&t);
+    // copy 1 block or whatever is remaining to t
+    r=(len > DES_BLK_LEN) ? DES_BLK_LEN : len;
+    memcpy (t.v8, in->v8, r);
+    // xor iv with t
+    blkxor (&t, iv);
+    des_enc (out, &t, key);
+    blkcpy (iv, out);
+    len -= r;
+    in++;
+    out++;
+  } while (r == DES_BLK_LEN);
+}
+
+// perform decryption in CBC mode
+void des_cbc_dec (void *data_out, void *data_in, 
+  uint32_t len, des_blk *iv, void *key)
+{
+  des_blk *in=(des_blk*)data_in;
+  des_blk *out=(des_blk*)data_out;
+  int r;
+  
+  // decrypt 64-bit blocks
+  do {
+    r=(len>DES_BLK_LEN) ? DES_BLK_LEN : len;
+    // decrypt block
+    des_dec (out, in, key);
+    // xor with iv
+    blkxor (out, iv);
+    // copy cipher text into iv
+    blkcpy (iv, in);
+    len -= r;
+    in++;
+    out++;
+  } while (r == DES_BLK_LEN);
+}
 

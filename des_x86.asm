@@ -4,35 +4,31 @@
 ; Odzhan
 
 .686
-.model flat, C
+.model flat
 
 ;option epilogue :none
 ;option prologue :none
 option casemap  :none
 
 .code
-  ; i'm getting worse at writing assembly :P
-  public permutex
-  public _permutex
-_permutex:
-permutex proc ptable:dword, input:dword, output:dword
-  local  cnt_byte:dword
-  local  cnt_bit:dword
 
+; esi = permutation table
+; ebx = data_in
+; edi = data_out
+permutex proc
   pushad
   
   ; ob=ptable[1];
   movzx  ecx, byte ptr[esi+1]
   jecxz  exit_permute
   
-  mov    [cnt_byte], ecx
-  
   xor    eax, eax
   add    esi, 2
 byte_loop:
   ; t=0
   xor    edx, edx
-  mov     dword ptr[cnt_bit], -8
+  mov    ebp, -8
+  push   ecx
 bit_loop:
   ; x = *p++ - 1;
   lodsb
@@ -53,13 +49,13 @@ bit_loop:
   jz     chk_len
   or     dl, 1
 chk_len:
-  inc    dword ptr[cnt_bit]
+  inc    ebp
   jnz    bit_loop
   xchg   eax, edx
   ; out[byte]=t;
   stosb
-  dec    dword ptr[cnt_byte]
-  jnz    byte_loop
+  pop    ecx
+  loop   byte_loop
 exit_permute:
   popad
   ret
@@ -86,25 +82,29 @@ splitin6bitwordsx proc
   movsd
   movsd
   
+  popad
   ret
 splitin6bitwordsx endp
 
-substitutex proc uses edx
+substitutex proc
+  push   edx
+  push   ebx
   ; t = a
   mov    dl, al
   ; a >> 1
   shr    al, 1
+  movzx  ebx, al
   ; x = sbp[ a >> 1 ]
   xlatb
-  ; (a & 1)
-  test   dl, 1
-  je     ret_msn
   ; x & 0x0F
   and    al, 15
-  ret
-ret_msn:
   ; x >> 4
-  shr    al, 4
+  shr    bl, 4
+  ; (a & 1)
+  test   dl, 1
+  cmove  eax, ebx
+  pop    ebx
+  pop    edx
   ret
 substitutex endp
 
@@ -152,7 +152,7 @@ exit_update:
   ret
 update_keyx endp
 
-start_encx proc data_in:dword, data_out:dword, key_in:dword, key_out:dword
+start_encx proc stdcall data_in:dword, data_out:dword, key_in:dword, key_out:dword
   pushad
   ; perform initial permutation on input
   ; permute (ip_permtab, data_in, data_out);
@@ -193,19 +193,17 @@ end_encx proc
   ret
 end_encx endp
 
-  public des_fx
-  public _des_fx
-_des_fx:
-des_fx proc r:dword, kr:dword
-  local _data[2]:dword
+; eax = key_in
+; ebx = R
+des_fx proc
+  local tmp_data[2]:dword
   local f_cnt   :dword
   local t       :dword
   local result  :dword
   
   pushad
-  ; permute((uint8_t*)e_permtab, (uint8_t*)&r, (uint8_t*)&data);
-  lea    edi, [_data]
-  lea    ebx, [r]
+  ; permute((uint8_t*)e_permtab, (uint8_t*)&r, (uint8_t*)&tmp_data);
+  lea    edi, [tmp_data]
   lea    esi, [e_permtab]
   call   permutex
   
@@ -213,7 +211,7 @@ des_fx proc r:dword, kr:dword
   ;   ((uint8_t*)&data)[i] ^= kr[i];
   push   7
   pop    ecx
-  mov    esi, [kr]
+  xchg   eax, esi
   push   edi
 xor_kr:
   lodsb
@@ -229,7 +227,7 @@ xor_kr:
   ; t=0
   xor    edx, edx
   lea    ebx, [sbox]
-  lea    esi, [_data]
+  lea    esi, [tmp_data]
 f_loop:
   movzx  eax, byte ptr[esi]              ; _data[i]
   inc    esi
@@ -262,21 +260,32 @@ des_rndx proc
   local tmp_key[8]:byte
   
   pushad
+  push   esi
+  
   lea    edi, [tmp_key]
   lea    esi, [pc2_permtab]
   ; permute (pc2_permtab, key, tmp_key);
   call   permutex
   
   ; L ^= des_f (R, kr);
-  call   des_fx
+  pop    esi
+  lodsd
+  xchg   eax, ebx
+  lodsd
+  xchg   eax, ebx
   
+  lea    edx, [tmp_key]
+  push   edx
+  push   ebx
+  call   des_fx
+
   ; swap (L, R);
   xchg   eax, ebx
   popad
   ret
 des_rndx endp
 
-des_encx proc ct:dword, pt:dword, key:dword
+des_encx proc C ct:dword, pt:dword, key:dword
   local tmp_data[8] :byte
   local tmp_key[8]  :byte
   
@@ -315,10 +324,7 @@ enc_loop:
 des_encx endp
 
 ; derived from code originally by Svend Olaf Mikkelson
-  public str2keyx
-  public _str2keyx
-_str2keyx:
-str2keyx proc
+str2keyx proc C
   pushad
   mov    esi, [esp+32+4] ; str
   mov    edi, [esp+32+8] ; key
