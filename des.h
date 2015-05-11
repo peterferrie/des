@@ -40,13 +40,16 @@ typedef union _des_t {
 extern "C" {
 #endif
 
-  void str2key (void*, des_blk*);
+  void des_str2key (void*, des_blk*);
 
   void des_enc (void*, void*, void*);
   void des_dec (void*, void*, void*);
 
   void des3_enc (void*, void*, void*, void*, void*);
   void des3_dec (void*, void*, void*, void*, void*);
+  
+void des_cbc_enc (void*, void*, void*, uint32_t, void*);
+uint32_t des_cbc_dec (void*, void*, void*, uint32_t, void*);
   
 #ifdef __cplusplus
 }

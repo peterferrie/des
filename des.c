@@ -158,7 +158,7 @@ uint8_t shiftkeyinv_permtab[] = {
   52, 53, 54, 55
 };
 
-void str2key (void *str, des_blk* key) {
+void des_str2key (void *str, des_blk* key) {
   uint32_t x1, r1, *p1;
   des_blk *s=(des_blk*)str;
   int i, j;
@@ -312,32 +312,32 @@ void update_key (des_blk *key, uint8_t rnd_idx, int type)
   }
 }  
 
-void des_enc (void *ct, void *pt, void *key) {
+void des_enc (void *key, void *in, void *out) {
   des_blk tmp_data, tmp_key;
   uint8_t  i;
   
-  start_enc (pt, &tmp_data, key, &tmp_key);
+  start_enc (in, &tmp_data, key, &tmp_key);
   
   for (i=0; i<DES_ROUNDS; i++) {
     update_key (&tmp_key, i, DES_ENCRYPT);
     des_f (&tmp_data, &tmp_key);
   }
-  end_enc (ct, &tmp_data);
+  end_enc (out, &tmp_data);
 }
 
 /******************************************************************************/
 
-void des_dec (void *pt, void *ct, void *key) {
+void des_dec (void *key, void *in, void *out) {
   des_blk tmp_data, tmp_key;
-  uint8_t  i;
+  int8_t  i;
   
-  start_enc (ct, &tmp_data, key, &tmp_key);
+  start_enc (in, &tmp_data, key, &tmp_key);
   
   for (i=DES_ROUNDS-1; i>=0; --i) {
     des_f (&tmp_data, &tmp_key);
     update_key (&tmp_key, i, DES_DECRYPT);
   }
-  end_enc (pt, &tmp_data);
+  end_enc (out, &tmp_data);
 }
 
 // perform Triple-DES encryption
@@ -362,83 +362,4 @@ void *key1, void *key2, void *key3)
   des_dec (out, c2, key1);
 }
 /******************************************************************************/
-
-// xor dst blk by src
-void blkxor (des_blk *dst, des_blk *src)
-{
-  uint8_t i;
-
-  for (i=0; i<DES_BLK_LEN; i++) {
-    dst->v8[i] ^= src->v8[i];
-  }
-}
-
-// copy src blk to dst
-void blkcpy (des_blk *dst, des_blk *src)
-{
-  uint8_t i;
-
-  for (i=0; i<DES_BLK_LEN; i++) {
-    dst->v8[i] = src->v8[i];
-  }
-}
-
-// clear block
-void blkclr (des_blk *blk)
-{
-  uint8_t i;
-
-  for (i=0; i<DES_BLK_LEN; i++) {
-    blk->v8[i] = 0;
-  }
-}
-
-// perform encryption in CBC mode
-void des_cbc_enc (void *data_out, void *data_in, 
-uint32_t len, des_blk *iv, void *key)
-{
-  des_blk t;
-  des_blk *in=(des_blk*)data_in;
-  des_blk *out=(des_blk*)data_out;
-  int r;
-  
-  // encrypt 64-bit blocks
-  do {
-    // clear t
-    blkclr (&t);
-    // copy 1 block or whatever is remaining to t
-    r=(len > DES_BLK_LEN) ? DES_BLK_LEN : len;
-    memcpy (t.v8, in->v8, r);
-    // xor iv with t
-    blkxor (&t, iv);
-    des_enc (out, &t, key);
-    blkcpy (iv, out);
-    len -= r;
-    in++;
-    out++;
-  } while (r == DES_BLK_LEN);
-}
-
-// perform decryption in CBC mode
-void des_cbc_dec (void *data_out, void *data_in, 
-uint32_t len, des_blk *iv, void *key)
-{
-  des_blk *in=(des_blk*)data_in;
-  des_blk *out=(des_blk*)data_out;
-  int r;
-  
-  // decrypt 64-bit blocks
-  do {
-    r=(len>DES_BLK_LEN) ? DES_BLK_LEN : len;
-    // decrypt block
-    des_dec (out, in, key);
-    // xor with iv
-    blkxor (out, iv);
-    // copy cipher text into iv
-    blkcpy (iv, in);
-    len -= r;
-    in++;
-    out++;
-  } while (r == DES_BLK_LEN);
-}
 

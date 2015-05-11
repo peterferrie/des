@@ -1,3 +1,3 @@
 @echo off
-cl /nologo /O1 des_test.c des.c
+cl /nologo /O2 des_test.c des.c des_cbc.c
 del *.obj *.err
