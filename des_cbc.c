@@ -59,7 +59,7 @@ void des_cbc_enc (void *key, void *data_in,
     r=(len > DES_BLK_LEN) ? DES_BLK_LEN : len;
     memcpy (t.v8, in->v8, r);
     // xor iv with t
-    blkxor (&t, iv);
+    memxor (&t, iv, r);
     des_enc (key, &t, out);
     blkcpy (iv, out);
     len -= r;

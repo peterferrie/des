@@ -173,13 +173,13 @@ void DES_file (char infile[], char outfile[], char *key, int crypt)
   uint8_t     buf_out[DES_BLK_LEN*32+64];
   uint8_t     k[DES_BLK_LEN], iv[DES_BLK_LEN];
   struct stat st;
-  uint32_t    cmp=0, total=0, dec_len=0;
+  uint32_t    cmp=0, total=0, dec_len=0, pad_len, last=0;
   
   in = fopen (infile, "rb");
   
   if (in!=NULL)
   {
-    out=fopen (outfile, "wb");
+    out = fopen (outfile, "wb");
     
     if (out!=NULL)
     {
@@ -194,21 +194,37 @@ void DES_file (char infile[], char outfile[], char *key, int crypt)
 
       while (len = fread (buf_in, 1, DES_BLK_LEN*32, in)) {
         cmp += len;
-        if (cmp > 10000000 && (cmp % 10000000)==0 || cmp==total) {
+        if (cmp > 1000000 && (cmp % 1000000)==0 || cmp==total) {
           progress (cmp, total);
-        }
-        if (len < DES_BLK_LEN*32) {
-          memset (&buf_in[len], 0, DES_BLK_LEN*32 - len);
+        }//
+        // if encrypting, pad
+        if (len < DES_BLK_LEN*32) 
+        {
+          last=1;
+          if (crypt==DES_ENCRYPT) 
+          {
+            memset (&buf_in[len], 0, DES_BLK_LEN*32 - len);
+            pad_len=(len % DES_BLK_LEN);
+            if (pad_len != 0) 
+            {
+              dec_len=DES_BLK_LEN - pad_len;
+
+              while (pad_len++ < DES_BLK_LEN) {
+                printf ("\npadding");
+                buf_in[len++] = dec_len;
+              }
+            }
+          }
         }
         if (crypt==DES_ENCRYPT) {
           des_cbc_enc (&ctx, buf_in, buf_out, len, iv);
-          if ((len % DES_BLK_LEN) != 0) {
-            //len = (len + DES_BLK_LEN) & -DES_BLK_LEN;
-          }
         } else {
-          dec_len=des_cbc_dec (&ctx, buf_in, buf_out, len, iv);
-          dec_len = (DES_BLK_LEN - dec_len);
-          if (dec_len!=0) printf ("\nsub %i", dec_len);
+          des_cbc_dec (&ctx, buf_in, buf_out, len, iv);
+          if (last && buf_out[len-1] < DES_BLK_LEN) {
+            printf ("\nundoing");
+            dec_len=(uint8_t)buf_out[len-1];
+            len-= dec_len;
+          }
         }
         fwrite (buf_out, 1, len, out);
       }
