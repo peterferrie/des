@@ -115,7 +115,8 @@ int run_tests (void)
     clen=hex2bin (ct1.v8, test_ct[i]);
     plen=hex2bin (pt1.v8, test_pt[i]);
     
-    des_enc (ct2.v8, pt1.v8, key.v8);
+    //des_enc (ct2.v8, pt1.v8, key.v8);
+    des_enc (key.v8, pt1.v8, ct2.v8);
     
     if (memcmp (ct1.v8, ct2.v8, clen)==0) {
       printf ("\nPassed test #%i", (i+1));
@@ -160,7 +161,7 @@ void progress (uint64_t fs_complete, uint64_t fs_total)
 
 void DES_genkey (void *out, char *str) 
 {
-  des_str2key (str, out);
+  //des_str2key (str, out);
 }
 
 // generate DES hash of file

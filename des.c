@@ -167,11 +167,11 @@ void des_str2key (void *str, des_blk* key) {
     p1=(uint32_t*)&s->v8[i*3];
     x1=SWAP32(*p1);
     if (i==1) {
-      x1=ROL32 (x1, 4);
+      x1=ROTL32 (x1, 4);
     }
     r1=0;
     for (j=0; j<4; j++) {
-      r1 = ROL32((r1 | (x1 & 0xFE000000)), 8);
+      r1 = ROTL32((r1 | (x1 & 0xFE000000)), 8);
       x1 <<= 7;
     }
     key->v32[i] = SWAP32(r1);
@@ -251,9 +251,9 @@ void des_f (des_blk *data_in, des_blk *key) {
   permute (pc2_permtab, key, &tmp_key);
   
   // mix key with data
-  for (i=0; i<7; i++)
-  tmp_data.v8[i] ^= tmp_key.v8[i];
-  
+  for (i=0; i<7; i++) {
+    tmp_data.v8[i] ^= tmp_key.v8[i];
+  }
   // split data into 6bit words
   splitin6bitwords (&tmp_data);
   sbp=sbox;
@@ -342,7 +342,7 @@ void des_dec (void *key, void *in, void *out) {
 
 // perform Triple-DES encryption
 void des3_enc (void *out, void *in, 
-void *key1, void *key2, void *key3)
+  void *key1, void *key2, void *key3)
 {
   uint8_t c1[8], c2[8];
   
@@ -353,7 +353,7 @@ void *key1, void *key2, void *key3)
 
 // perform Triple-DES decryption
 void des3_dec (void *out, void *in, 
-void *key1, void *key2, void *key3)
+  void *key1, void *key2, void *key3)
 {
   uint8_t c1[8], c2[8];
   
