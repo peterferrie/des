@@ -23,6 +23,10 @@ typedef union _des_t {
   uint64_t v64;
 } des_blk;
 
+typedef union _des_ctx_t {
+	des_blk keys[16+1];
+} des_ctx;
+
 #define U8V(v)  ((uint8_t)(v)  & 0xFFU)
 #define U16V(v) ((uint16_t)(v) & 0xFFFFU)
 #define U32V(v) ((uint32_t)(v) & 0xFFFFFFFFUL)
@@ -77,9 +81,9 @@ extern "C" {
 #endif
 
   void des_str2key (void*, des_blk*);
+	void des_setkey (des_ctx*, void *);
 
-  void des_enc (void*, void*, void*);
-  void des_dec (void*, void*, void*);
+  void des_enc (des_ctx*, void*, void*, int);
 
   void des3_enc (void*, void*, void*, void*, void*);
   void des3_dec (void*, void*, void*, void*, void*);

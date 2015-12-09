@@ -60,7 +60,7 @@ void des_cbc_enc (void *key, void *data_in,
     memcpy (t.v8, in->v8, r);
     // xor iv with t
     memxor (&t, iv, r);
-    des_enc (key, &t, out);
+    //des_enc (key, &t, out);
     blkcpy (iv, out);
     len -= r;
     in++;
@@ -76,12 +76,13 @@ uint32_t des_cbc_dec (void *key, void *data_in,
   des_blk  *out=(des_blk*)data_out;
   des_blk  *iv=(des_blk*)v;
   uint32_t r;
-  
+  des_ctx ctx;
+	
   // decrypt 64-bit blocks
   do {
     r=(len>DES_BLK_LEN) ? DES_BLK_LEN : len;
     // decrypt block
-    des_dec (key, in, out);
+    des_enc (&ctx, in, out, DES_DECRYPT);
     // xor with iv
     memxor (out, iv, r);
     // copy cipher text into iv

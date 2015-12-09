@@ -1,4 +1,4 @@
 @echo off
-ml /coff /Cp /c /nologo des_x86.asm
-cl /nologo /O1 des_test.c des_x86.obj des.c
+cl /nologo /O2 /Os /Fa /GS- des_test.c des.c des_cbc.c
+jwasm -bin des.asm
 del *.obj *.err
