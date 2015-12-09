@@ -172,8 +172,6 @@ void permute (uint8_t ptbl[], void *input, des_blk *out) {
   uint8_t byte, bit, x, t;
   uint8_t *p=ptbl, *in=(uint8_t*)input;
   
-	//memset (out, 0, DES_BLK_LEN);
-	
   ob = p[1];
   p  = &p[2];
   
@@ -213,18 +211,14 @@ uint8_t substitute (uint8_t a, uint8_t *sbp) {
 
 /******************************************************************************/
 
-void des_f (des_blk *data_in, des_blk *key) {
+void des_f (uint32_t *L, uint32_t *R, des_blk *key) {
   uint8_t  i, x;
-  uint32_t t=0, L, R;
+  uint32_t t=0;
   uint8_t *sbp;
   des_blk tmp_data, tmp_key, res;
   
-  // load data
-  L=data_in->v32[0];
-  R=data_in->v32[1];
-  
   // permute 1 half of data
-  permute (e_permtab, &R, &tmp_data);
+  permute (e_permtab, R, &tmp_data);
   
   // mix key with data
   for (i=0; i<7; i++) {
@@ -245,11 +239,7 @@ void des_f (des_blk *data_in, des_blk *key) {
   permute (p_permtab, &t, &res);
   
   // xor
-  L ^= res.v32[0];
-  
-  // save swapped
-  data_in->v32[1]=L;
-  data_in->v32[0]=R;
+  *L ^= res.v32[0];
 }
 
 void des_setkey (des_ctx *ctx, void *input)
@@ -277,7 +267,7 @@ void des_enc (des_ctx *ctx, void *in, void *out, int enc)
 {
 	int      rnd, ofs=1;
 	des_blk  t0;
-	uint32_t L, R;
+	uint32_t L, R, T;
 	
 	des_blk *key=&ctx->keys[0];
 	
@@ -288,14 +278,16 @@ void des_enc (des_ctx *ctx, void *in, void *out, int enc)
 	// apply inital permuation to input
 	permute (ip_permtab, in, &t0);
 	
+	L=t0.v32[0];
+	R=t0.v32[1];
+	
 	for (rnd=0; rnd<DES_ROUNDS; rnd++)
 	{
-		des_f (&t0, key);
+		des_f (&L, &R, key);
+		// swap
+		T=L; L=R; R=T;
 		key+=ofs;
 	}
-  L=t0.v32[0];
-  R=t0.v32[1];
-  
   R ^= L;
   L ^= R;
   R ^= L;
