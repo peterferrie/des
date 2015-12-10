@@ -180,7 +180,7 @@ void permute (uint8_t ptbl[], void *input, des_blk *out) {
     for (bit=0; bit<8; ++bit) {
       x = *p++ - 1;
       t <<= 1;
-      if ((in[x / 8]) & (0x80 >> (x % 8)) ){
+      if ((in[x / 8]) & (0x80 >> (x & 7)) ){
         t |= 0x01;
       }
     }
@@ -190,61 +190,41 @@ void permute (uint8_t ptbl[], void *input, des_blk *out) {
 
 /******************************************************************************/
 
-/******************************************************************************/
-void splitin6bitwords (des_blk *x) {
-  des_blk t;
-  
-  t.v64 = x->v64 & 0x0000ffffffffffffLL;
-  
-  permute (splitin6bitword_permtab, &t, x);
-}
-
-/******************************************************************************/
-uint8_t substitute (uint8_t a, uint8_t *sbp) {
-  uint8_t x;
-  
-  x = sbp[a >> 1];
-  x = (a & 1) ? x & 0x0F : x >> 4;
-  
-  return x;
-}
-
-/******************************************************************************/
-
-void des_f (uint32_t *L, uint32_t *R, des_blk *key) {
-  uint8_t  i, x;
+uint32_t des_f (uint32_t *x, des_blk *key) {
+  uint8_t  i, x0, x1;
   uint32_t t=0;
-  uint8_t *sbp;
-  des_blk tmp_data, tmp_key, res;
+  uint8_t  *sbp;
+  des_blk  t0, t1;
   
   // permute 1 half of data
-  permute (e_permtab, R, &tmp_data);
+  permute (e_permtab, x, &t0);
   
   // mix key with data
   for (i=0; i<7; i++) {
-    tmp_data.v8[i] ^= key->v8[i];
+    t0.v8[i] ^= key->v8[i];
   }
-  // split data into 6bit words
-  splitin6bitwords (&tmp_data);
+
+  permute (splitin6bitword_permtab, &t0, &t1);
   sbp=sbox;
-  
-  for(i=0; i<8; ++i) {
-    x = substitute (tmp_data.v8[i], sbp);
+	
+  for (i=0; i<8; ++i) 
+	{
+		x0=t1.v8[i];
+		x1 = sbp[x0 >> 1];
+    x1 = (x0 & 1) ? x1 & 0x0F : x1 >> 4;
     t <<= 4;
-    t |= x;
+    t |= x1;
     sbp += 32;
   }
   t=SWAP32(t);
 
-  permute (p_permtab, &t, &res);
-  
-  // xor
-  *L ^= res.v32[0];
+  permute (p_permtab, &t, &t0);
+  return t0.v32[0];
 }
 
 void des_setkey (des_ctx *ctx, void *input)
 {
-	int rnd;
+	int     rnd;
 	des_blk *k;
 	des_blk k1, k2;
 	
@@ -283,17 +263,15 @@ void des_enc (des_ctx *ctx, void *in, void *out, int enc)
 	
 	for (rnd=0; rnd<DES_ROUNDS; rnd++)
 	{
-		des_f (&L, &R, key);
+		L ^= des_f (&R, key);
 		// swap
-		T=L; L=R; R=T;
+		T=L; 
+		L=R; 
+		R=T;
 		key+=ofs;
 	}
-  R ^= L;
-  L ^= R;
-  R ^= L;
-  
-  t0.v32[0]=L;
-  t0.v32[1]=R;
+  t0.v32[0]=R;
+  t0.v32[1]=L;
   
 	// apply inverse permuation
   permute (inv_ip_permtab, &t0, out);

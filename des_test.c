@@ -121,12 +121,13 @@ int run_tests (void)
     plen=hex2bin (pt1.v8, test_pt[i]);
     
     //des_enc (ct2.v8, pt1.v8, key.v8);
-		des_setkey(&ctx, key.v8);
-    des_enc (&ctx, pt1.v8, ct2.v8, DES_ENCRYPT);
-    des_enc (&ctx, ct2.v8, pt2.v8, DES_DECRYPT);
+		des_setkeyx(&ctx, key.v8);
+    des_encx (&ctx, pt1.v8, ct2.v8, DES_ENCRYPT);
+    des_encx (&ctx, ct2.v8, pt2.v8, DES_DECRYPT);
 		
     if (memcmp (pt1.v8, pt2.v8, clen)==0) {
-      printf ("\nPassed test #%i", (i+1));
+      printf ("\nPassed Encryption/Decryption test #%i %08X %08X", 
+			  (i+1), pt1.v32[0], pt2.v32[0]);
     } else {
       fails++;
       printf ("\nFailed test #%i : "
