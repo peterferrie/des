@@ -82,9 +82,12 @@ extern "C" {
 
   void des_str2key (void*, des_blk*);
 	void des_setkey (des_ctx*, void *);
-
   void des_enc (des_ctx*, void*, void*, int);
 
+  void des_str2keyx (void*, des_blk*);
+	void des_setkeyx (des_ctx*, void *);
+  void des_encx (des_ctx*, void*, void*, int);
+	
   void des3_enc (void*, void*, void*, void*, void*);
   void des3_dec (void*, void*, void*, void*, void*);
   
@@ -93,6 +96,12 @@ uint32_t des_cbc_dec (void*, void*, void*, uint32_t, void*);
   
 #ifdef __cplusplus
 }
+#endif
+
+#ifdef USE_ASM
+#define des_str2key(x,y) des_str2keyx(x,y)
+#define des_setkey(x,y) des_setkeyx(x,y)
+#define des_enc(w,x,y,z) des_encx(w,x,y,z)
 #endif
 
 #endif

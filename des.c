@@ -51,7 +51,7 @@ uint8_t sbox[256] = {
 };
 
 uint8_t e_permtab[] = {
-  4,  6, 					/* 4 bytes in 6 bytes out*/
+  4,  6,          /* 4 bytes in 6 bytes out*/
   32,  1,  2,  3,  4,  5,
   4,  5,  6,  7,  8,  9,
   8,  9, 10, 11, 12, 13,
@@ -63,7 +63,7 @@ uint8_t e_permtab[] = {
 };
 
 uint8_t p_permtab[] = {
-  4,  4,						/* 32 bit -> 32 bit */
+  4,  4,            /* 32 bit -> 32 bit */
   16,  7, 20, 21,
   29, 12, 28, 17,
   1, 15, 23, 26,
@@ -75,7 +75,7 @@ uint8_t p_permtab[] = {
 };
 
 uint8_t ip_permtab[] = {
-  8,  8,						/* 64 bit -> 64 bit */
+  8,  8,            /* 64 bit -> 64 bit */
   58, 50, 42, 34, 26, 18, 10, 2,
   60, 52, 44, 36, 28, 20, 12, 4,
   62, 54, 46, 38, 30, 22, 14, 6,
@@ -87,7 +87,7 @@ uint8_t ip_permtab[] = {
 };
 
 uint8_t inv_ip_permtab[] = {
-  8, 8,						/* 64 bit -> 64 bit */
+  8, 8,           /* 64 bit -> 64 bit */
   40, 8, 48, 16, 56, 24, 64, 32,
   39, 7, 47, 15, 55, 23, 63, 31,
   38, 6, 46, 14, 54, 22, 62, 30,
@@ -99,7 +99,7 @@ uint8_t inv_ip_permtab[] = {
 };
 
 uint8_t pc1_permtab[] = {
-  8,  7, 					/* 64 bit -> 56 bit*/
+  8,  7,          /* 64 bit -> 56 bit*/
   57, 49, 41, 33, 25, 17,  9,
   1, 58, 50, 42, 34, 26, 18,
   10,  2, 59, 51, 43, 35, 27,
@@ -111,7 +111,7 @@ uint8_t pc1_permtab[] = {
 };
 
 uint8_t pc2_permtab[] = {
-  7,	 6, 					/* 56 bit -> 48 bit */
+  7,   6,           /* 56 bit -> 48 bit */
   14, 17, 11, 24,  1,  5,
   3, 28, 15,  6, 21, 10,
   23, 19, 12,  4, 26,  8,
@@ -123,7 +123,7 @@ uint8_t pc2_permtab[] = {
 };
 
 uint8_t splitin6bitword_permtab[] = {
-  8,  8, 					/* 64 bit -> 64 bit */
+  8,  8,          /* 64 bit -> 64 bit */
   64, 64,  1,  6,  2,  3,  4,  5, 
   64, 64,  7, 12,  8,  9, 10, 11, 
   64, 64, 13, 18, 14, 15, 16, 17, 
@@ -135,7 +135,7 @@ uint8_t splitin6bitword_permtab[] = {
 };
 
 uint8_t shiftkey_permtab[] = {
-  7,  7, 					/* 56 bit -> 56 bit */
+  7,  7,          /* 56 bit -> 56 bit */
   2,  3,  4,  5,  6,  7,  8,  9,
   10, 11, 12, 13, 14, 15, 16, 17,
   18, 19, 20, 21, 22, 23, 24, 25, 
@@ -172,6 +172,8 @@ void permute (uint8_t ptbl[], void *input, des_blk *out) {
   uint8_t byte, bit, x, t;
   uint8_t *p=ptbl, *in=(uint8_t*)input;
   
+	memset (out, 0, 8);
+	
   ob = p[1];
   p  = &p[2];
   
@@ -206,11 +208,11 @@ uint32_t des_f (uint32_t *x, des_blk *key) {
 
   permute (splitin6bitword_permtab, &t0, &t1);
   sbp=sbox;
-	
+  
   for (i=0; i<8; ++i) 
-	{
-		x0=t1.v8[i];
-		x1 = sbp[x0 >> 1];
+  {
+    x0=t1.v8[i];
+    x1 = sbp[x0 >> 1];
     x1 = (x0 & 1) ? x1 & 0x0F : x1 >> 4;
     t <<= 4;
     t |= x1;
@@ -224,56 +226,56 @@ uint32_t des_f (uint32_t *x, des_blk *key) {
 
 void des_setkey (des_ctx *ctx, void *input)
 {
-	int     rnd;
-	des_blk *k;
-	des_blk k1, k2;
-	
-	permute (pc1_permtab, input, &k1);
-	
-	for (rnd=0; rnd<DES_ROUNDS; rnd++)
-	{
-		permute (shiftkey_permtab, &k1, &k2);
-		k=&k2;
-		if (ROTTABLE & (1 << rnd)) {
-			permute (shiftkey_permtab, &k2, &k1);
-			k=&k1;
-		}
-		permute (pc2_permtab, k, &ctx->keys[rnd]);
-		memcpy (k1.v8, k->v8, DES_BLK_LEN);
-	}
+  int     rnd;
+  des_blk *k;
+  des_blk k1, k2;
+  
+  permute (pc1_permtab, input, &k1);
+  
+  for (rnd=0; rnd<DES_ROUNDS; rnd++)
+  {
+    permute (shiftkey_permtab, &k1, &k2);
+    k=&k2;
+    if (ROTTABLE & (1 << rnd)) {
+      permute (shiftkey_permtab, &k2, &k1);
+      k=&k1;
+    }
+    permute (pc2_permtab, k, &ctx->keys[rnd]);
+    memcpy (k1.v8, k->v8, DES_BLK_LEN);
+  }
 }
 
 void des_enc (des_ctx *ctx, void *in, void *out, int enc)
 {
-	int      rnd, ofs=1;
-	des_blk  t0;
-	uint32_t L, R, T;
-	
-	des_blk *key=&ctx->keys[0];
-	
-	if (enc==DES_DECRYPT) {
-		ofs = -1;
-		key += 15;
-	}
-	// apply inital permuation to input
-	permute (ip_permtab, in, &t0);
-	
-	L=t0.v32[0];
-	R=t0.v32[1];
-	
-	for (rnd=0; rnd<DES_ROUNDS; rnd++)
-	{
-		L ^= des_f (&R, key);
-		// swap
-		T=L; 
-		L=R; 
-		R=T;
-		key+=ofs;
-	}
+  int      rnd, ofs=1;
+  des_blk  t0;
+  uint32_t L, R, T;
+  
+  des_blk *key=&ctx->keys[0];
+  
+  if (enc==DES_DECRYPT) {
+    ofs = -1;
+    key += 15;
+  }
+  // apply inital permuation to input
+  permute (ip_permtab, in, &t0);
+  
+  L=t0.v32[0];
+  R=t0.v32[1];
+  
+  for (rnd=0; rnd<DES_ROUNDS; rnd++)
+  {
+    L ^= des_f (&R, key);
+    // swap
+    T=L; 
+    L=R; 
+    R=T;
+    key+=ofs;
+  }
   t0.v32[0]=R;
   t0.v32[1]=L;
   
-	// apply inverse permuation
+  // apply inverse permuation
   permute (inv_ip_permtab, &t0, out);
 }
 
@@ -282,15 +284,15 @@ void des3_enc (void *out, void *in,
   void *key1, void *key2, void *key3)
 {
   uint8_t c1[8], c2[8];
-	des_ctx ctx;
+  des_ctx ctx;
   
-	des_setkey (&ctx, key1);
+  des_setkey (&ctx, key1);
   des_enc (&ctx, c1, in, DES_ENCRYPT);
-	
-	des_setkey (&ctx, key2);
+  
+  des_setkey (&ctx, key2);
   des_dec (&ctx, c2, c1, DES_ENCRYPT);
-	
-	des_setkey (&ctx, key3);
+  
+  des_setkey (&ctx, key3);
   des_enc (&ctx, out, c2, DES_ENCRYPT);
 }
 
@@ -299,15 +301,15 @@ void des3_dec (void *out, void *in,
   void *key1, void *key2, void *key3)
 {
   uint8_t c1[8], c2[8];
-	des_ctx ctx;
+  des_ctx ctx;
   
-	des_setkey (&ctx, key1);
+  des_setkey (&ctx, key1);
   des_enc (&ctx, c1, in, DES_ENCRYPT);
-	
-	des_setkey (&ctx, key2);
+  
+  des_setkey (&ctx, key2);
   des_dec (&ctx, c2, c1, DES_ENCRYPT);
-	
-	des_setkey (&ctx, key3);
+  
+  des_setkey (&ctx, key3);
   des_enc (&ctx, out, c2, DES_ENCRYPT);
 }*/
 /******************************************************************************/
