@@ -65,9 +65,9 @@ void lanman (uint8_t *lmhash, uint8_t *pwd)
   des_blk key1, key2;
   size_t  len=strlen(pwd);
   des_ctx ctx;
-	
-	memset (lmhash, 0, 16);
-	
+  
+  memset (lmhash, 0, 16);
+  
   // MS Lanman passwords don't exceed 14 characters
   len=(len>14) ? 14 : len;
   
@@ -78,10 +78,10 @@ void lanman (uint8_t *lmhash, uint8_t *pwd)
   des_str2key (&lmpwd[0], &key1);
   des_str2key (&lmpwd[7], &key2);
 
-	des_setkey (&ctx, &key1);
+  des_setkey (&ctx, &key1);
   des_enc (&ctx, "KGS!@#$%", (des_blk*)&lmhash[0], DES_ENCRYPT);
-	
-	des_setkey (&ctx, &key2);
+  
+  des_setkey (&ctx, &key2);
   des_enc (&ctx, "KGS!@#$%", (des_blk*)&lmhash[8], DES_ENCRYPT);
 }
   
@@ -115,7 +115,7 @@ int run_tests (void)
 
   des_blk ct1, ct2, pt1, pt2, key;
   des_ctx ctx;
-	
+  
   for (i=0; i<sizeof (test_keys)/sizeof(char*); i++)
   { 
     klen=hex2bin (key.v8, test_keys[i]);
@@ -123,13 +123,13 @@ int run_tests (void)
     plen=hex2bin (pt1.v8, test_pt[i]);
     
     //des_enc (ct2.v8, pt1.v8, key.v8);
-		des_setkey(&ctx, key.v8);
+    des_setkey(&ctx, key.v8);
     des_enc (&ctx, pt1.v8, ct2.v8, DES_ENCRYPT);
     des_enc (&ctx, ct2.v8, pt2.v8, DES_DECRYPT);
-		
+    
     if (memcmp (pt1.v8, pt2.v8, clen)==0) {
       printf ("\nPassed Encryption/Decryption test #%i %08X %08X", 
-			  (i+1), pt1.v32[0], pt2.v32[0]);
+        (i+1), pt1.v32[0], pt2.v32[0]);
     } else {
       fails++;
       printf ("\nFailed test #%i : "
@@ -274,7 +274,7 @@ void usage (void)
   printf ("\n  -e          Encrypt");
   printf ("\n  -d          Decrypt");
   printf ("\n  -x          Run tests");
-	printf ("\n  -l <pwd>    Create Lanman hash\n");
+  printf ("\n  -l <pwd>    Create Lanman hash\n");
   exit (0);
 }
 
@@ -284,7 +284,7 @@ int main (int argc, char *argv[])
   int i, test=0, crypt=DES_ENCRYPT;
   char *in=NULL, *out=NULL, *pwd="password";
   uint8_t lm[32];
-	
+  
   // for each argument
   for (i=1; i<argc; i++)
   {
@@ -313,15 +313,15 @@ int main (int argc, char *argv[])
         case 'x':
           test=1;
           break;
-				case 'l': {
-					pwd=getparam(argc, argv, &i);
-					lanman (lm, pwd);
-					printf ("\nMS Lanman = ");
-					for (i=0; i<16; i++) {
-					  printf ("%02X", lm[i]);
-					}
-					return 0;
-				}
+        case 'l': {
+          pwd=getparam(argc, argv, &i);
+          lanman (lm, pwd);
+          printf ("\nMS Lanman = ");
+          for (i=0; i<16; i++) {
+            printf ("%02X", lm[i]);
+          }
+          return 0;
+        }
         default:
           usage ();
           break;
