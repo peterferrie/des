@@ -234,11 +234,11 @@ void des_setkey (des_ctx *ctx, void *input)
   
   permute (pc1_permtab, input, &k1);
   
-  for (rnd=0x7EFC; rnd>0; rnd >>= 1)
+  for (rnd=0; rnd<16; rnd++)
   {
     permute (shiftkey_permtab, &k1, &k2);
     k=&k2;
-    if (rnd & 1) {
+    if (ROTTABLE & (1 << rnd)) {
       permute (shiftkey_permtab, &k2, &k1);
       k=&k1;
     }
