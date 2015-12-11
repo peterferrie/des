@@ -1,10 +1,10 @@
 
 
 ; DES in x86 assembly
-; 1119 bytes
+; 1114 bytes
 ; Odzhan
 
-	bits 32
+  bits 32
 
 struc pushad_t
   _edi resd 1
@@ -17,13 +17,13 @@ struc pushad_t
   _eax resd 1
   .size:
 endstruc
-	
-	%ifndef BIN
-	  global _des_str2keyx
-	  global _des_setkeyx
-		global _des_encx
+  
+  %ifndef BIN
+    global _des_str2keyx
+    global _des_setkeyx
+    global _des_encx
   %endif
-	
+  
 ; esi = permutation table
 ; ebx = input
 ; edi = output
@@ -31,23 +31,23 @@ _permutex:
 permutex:
   pushad
   
-	;mov    esi, [esp+32+ 4] ; ptbl
-	;mov    ebx, [esp+32+ 8] ; input
-	;mov    edi, [esp+32+12] ; out
-	
-	xor    eax, eax
-	push   edi
-	stosd
-	stosd
-	pop    edi
-	
+  ;mov    esi, [esp+32+ 4] ; ptbl
+  ;mov    ebx, [esp+32+ 8] ; input
+  ;mov    edi, [esp+32+12] ; out
+  
+  xor    eax, eax
+  push   edi
+  stosd
+  stosd
+  pop    edi
+  
   ; ob=ptable[1];
   movzx  ecx, byte[esi+1]
-	lodsw
+  lodsw
 p_l1:
   ; t=0
   cdq
-	push   ecx
+  push   ecx
   mov    ebp, -8
 p_l2:
   ; x = *p++ - 1;
@@ -77,228 +77,232 @@ p_l3:
   loop   p_l1
   popad
   ret
-	
+  
 ; eax = input
 ; esi = key
 ; return result in eax
 _des_fx:
 des_fx:
-	pushfd
-	pushad
-	cld
+  pushfd
+  pushad
+  cld
 
-	;mov    eax, [esp+32+4+4] ; x
-	;mov    esi, [esp+32+8+4] ; key
-	
-	; put x in ebx
-	xchg   ebx, eax
-	; put key in eax
-	xchg   eax, esi
-	xor    ecx, ecx
-	
-	; allocate 16 bytes
-	sub    esp, 16
-	lea    ebp, [esp+8] ; ebp has t1
-	
-	; permute (e_permtab, x, &t0);
-	mov    edi, esp
-	mov    esi, e_permtab
-	call   permutex
-	
-	; put key in esi
-	xchg   eax, esi
-	mov    cl, 7
+  ;mov    eax, [esp+32+4+4] ; x
+  ;mov    esi, [esp+32+8+4] ; key
+  
+  ; put x in ebx
+  xchg   ebx, eax
+  ; put key in eax
+  xchg   eax, esi
+  xor    ecx, ecx
+  
+  ; allocate 16 bytes
+  sub    esp, 16
+  lea    ebp, [esp+8] ; ebp has t1
+  
+  ; permute (e_permtab, x, &t0);
+  mov    edi, esp
+  mov    esi, e_permtab
+  call   permutex
+  
+  ; put key in esi
+  xchg   eax, esi
+  mov    cl, 7
 df_l1:
-	lodsb
-	xor    al, [edi]
-	stosb
-	loop   df_l1
-	
-	; permute (splitin6bitword_permtab, &t0, &t1);
-	mov    esi, splitin6bitword_permtab
-	mov    ebx, esp
-	mov    edi, ebp
-	call   permutex
-	
-	mov    esi, ebp
-	mov    ebx, sbox
-	mov    cl, 8
-	xor    edx, edx
-	;int3
+  lodsb
+  xor    al, [edi]
+  stosb
+  loop   df_l1
+  
+  ; permute (splitin6bitword_permtab, &t0, &t1);
+  mov    esi, splitin6bitword_permtab
+  mov    ebx, esp
+  mov    edi, ebp
+  call   permutex
+  
+  mov    esi, ebp
+  mov    ebx, sbox
+  mov    cl, 8
+  xor    edx, edx
+  ;int3
 df_l2:
   push   ecx
-	lodsb
-	mov    cl, al
-	shr    al, 1
-	xlatb
-	aam    16
-	test   cl, 1
-	jnz    df_l3
-	mov    al, ah
+  lodsb
+  mov    cl, al
+  shr    al, 1
+  xlatb
+  aam    16
+  test   cl, 1
+  jnz    df_l3
+  mov    al, ah
 df_l3:
-	shl    edx, 4
-	or     dl, al
-	add    ebx, 32
-	pop    ecx
-	loop   df_l2
-	
-	bswap  edx
-	
-	; permute (p_permtab, &t, &t0);
-	mov    esi, p_permtab
-	mov    edi, esp
-	mov    ebx, ebp
-	mov    [ebx], edx
-	call   permutex
-	mov    eax, [edi]
-	add    esp, 4*4
-	mov    [esp+_eax], eax
-	popad
-	popfd
-	ret
-	
+  shl    edx, 4
+  or     dl, al
+  add    ebx, 32
+  pop    ecx
+  loop   df_l2
+  
+  bswap  edx
+  
+  ; permute (p_permtab, &t, &t0);
+  mov    esi, p_permtab
+  mov    edi, esp
+  mov    ebx, ebp
+  mov    [ebx], edx
+  call   permutex
+  mov    eax, [edi]
+  add    esp, 4*4
+  mov    [esp+_eax], eax
+  popad
+  popfd
+  ret
+  
 _des_setkeyx:
 des_setkey:
-	pushad
-	mov    ebx, [esp+32+8]  ; input
-	mov    ebp, [esp+32+4]  ; ctx
-	
-	; alloc space for k1, k2
-	sub    esp, 16
-	
-	; permute (pc1_permtab, input, &k1);
-	mov    esi, pc1_permtab
-	mov    edi, esp
-	call   permutex
-	xor    ecx, ecx
+  pushad
+  mov    ebx, [esp+32+8]  ; input
+  mov    ebp, [esp+32+4]  ; ctx
+  
+  ; alloc space for k1, k2
+  sub    esp, 16
+  
+  ; permute (pc1_permtab, input, &k1);
+  mov    esi, pc1_permtab
+  mov    edi, esp
+  call   permutex
+  ;xor    ecx, ecx
+  mov    ecx, 07EFCh
 sk_l1:
   ; permute (shiftkey_permtab, &k1, &k2);
-	mov    ebx, esp ; k1
-	lea    edi, [ebx+8] ; k2
-	mov    esi, shiftkey_permtab
-	call   permutex
-	push   1
-	pop    eax
-	shl    eax, cl
-	test   eax, 07EFCh
-	xchg   ebx, edi    ; k2 is k
-	jz     sk_l2
-	; permute (shiftkey_permtab, &k2, &k1);
-	call   permutex
-	mov    ebx, edi ; now k2 is k
+  mov    ebx, esp ; k1
+  lea    edi, [ebx+8] ; k2
+  mov    esi, shiftkey_permtab
+  call   permutex
+  ;push   1
+  ;pop    eax
+  ;shl    eax, cl
+  ;test   eax, 07EFCh
+  test   cl, 1
+  xchg   ebx, edi    ; k2 is k
+  jz     sk_l2
+  ;jz     sk_l2
+  ; permute (shiftkey_permtab, &k2, &k1);
+  call   permutex
+  mov    ebx, edi ; now k2 is k
 sk_l2:
-	; permute (pc2_permtab, k, &ctx->keys[rnd]);
-	mov    esi, pc2_permtab
-	mov    edi, ebp
-	call   permutex
-	; memcpy (k1.v8, k->v8, DES_BLK_LEN);
-	mov    esi, ebx
-	mov    edi, ebp
-	movsd
-	movsd
-	mov    ebp, edi
-	; rnd++
-	inc    ecx
-	cmp    ecx, 16
-	jnz    sk_l1
-	; free stack
-	add    esp, ecx
-	popad
-	ret
-	
+  ; permute (pc2_permtab, k, &ctx->keys[rnd]);
+  mov    esi, pc2_permtab
+  mov    edi, ebp
+  call   permutex
+  ; memcpy (k1.v8, k->v8, DES_BLK_LEN);
+  mov    esi, ebx
+  mov    edi, ebp
+  movsd
+  movsd
+  mov    ebp, edi
+  ; rnd++
+  ;inc    ecx
+  ;cmp    ecx, 16
+  shr    ecx, 1
+  jnz    sk_l1
+  ; free stack
+  add    esp, 16
+  popad
+  ret
+  
 %define L ebx
 %define R edx
-	
+  
 _des_encx:
 des_encx:
-	pushad
+  pushad
 
-	mov    eax, [esp+32+ 4] ; ctx
-	mov    ebx, [esp+32+ 8] ; in
-	mov    ebp, [esp+32+12] ; out
-	mov    ecx, [esp+32+16] ; enc
-	
-	; permute (ip_permtab, in, &t0);
-	push   ecx
-	push   ecx
-	mov    edi, esp
-	push   eax
-	mov    esi, ip_permtab
-	call   permutex
-	
-	mov    esi, edi
-	lodsd
-	xchg   eax, L
-	lodsd
-	xchg   eax, R
-	pop    esi
-	mov    edi, ebp
-	
-	test   ecx, ecx
-	mov    cl, 16
-	jz     de_l1
-	; if decrypt, advance key and set direction
-	add    esi, 15*8
-	std
+  mov    eax, [esp+32+ 4] ; ctx
+  mov    ebx, [esp+32+ 8] ; in
+  mov    ebp, [esp+32+12] ; out
+  mov    ecx, [esp+32+16] ; enc
+  
+  ; permute (ip_permtab, in, &t0);
+  push   ecx
+  push   ecx
+  mov    edi, esp
+  push   eax
+  mov    esi, ip_permtab
+  call   permutex
+  
+  mov    esi, edi
+  lodsd
+  xchg   eax, L
+  lodsd
+  xchg   eax, R
+  pop    esi
+  mov    edi, ebp
+  
+  test   ecx, ecx
+  mov    cl, 16
+  jz     de_l1
+  ; if decrypt, advance key and set direction
+  add    esi, 15*8
+  std
 de_l1:
   ; L ^= des_f (&R, key);
-	push   R
-	mov    eax, esp
-	call   des_fx
-	
-	xor    L, eax
-	pop    eax
-	; swap
-	xchg   L, R
-	; key += ofs;
-	lodsd
-	lodsd
-	loop   de_l1
-	cld
-	
-	; permute (inv_ip_permtab, &t0, out);
-	mov    dword[esp], R
-	mov    dword[esp+4], L
-	mov    ebx, esp
-	mov    esi, inv_ip_permtab
-	call   permutex
-	pop    eax
-	pop    eax
-	popad
-	ret
-	
+  push   R
+  mov    eax, esp
+  call   des_fx
+  
+  xor    L, eax
+  pop    eax
+  ; swap
+  xchg   L, R
+  ; key += ofs;
+  lodsd
+  lodsd
+  loop   de_l1
+  cld
+  
+  ; permute (inv_ip_permtab, &t0, out);
+  mov    dword[esp], R
+  mov    dword[esp+4], L
+  mov    ebx, esp
+  mov    esi, inv_ip_permtab
+  call   permutex
+  pop    eax
+  pop    eax
+  popad
+  ret
+  
 _des_str2keyx:
 des_str2keyx:
-	pushad
-	mov    esi, [esp+32+4] ; str
-	mov    edi, [esp+32+8] ; key
-	mov    ecx, 2
+  pushad
+  mov    esi, [esp+32+4] ; str
+  mov    edi, [esp+32+8] ; key
+  mov    ecx, 2
 s2k_l1:
-	lodsd
-	dec   esi
-	bswap eax
-	xor   ebp, ebp
-	xor   edx, edx
-	cmp   ecx, 1
-	jnz   s2k_l2
-	rol   eax, 4
+  lodsd
+  dec   esi
+  bswap eax
+  xor   ebp, ebp
+  xor   edx, edx
+  cmp   ecx, 1
+  jnz   s2k_l2
+  rol   eax, 4
 s2k_l2:
-	mov   ebx, eax
-	and   ebx, 0FE000000h
-	or    edx, ebx
-	rol   edx, 8
-	shl   eax, 7
-	inc   ebp
-	cmp   ebp, 4
-	jnz   s2k_l2
-	
-	xchg  eax, edx
-	bswap eax
-	stosd
-	loop  s2k_l1
-	popad
-	ret
-	
+  mov   ebx, eax
+  and   ebx, 0FE000000h
+  or    edx, ebx
+  rol   edx, 8
+  shl   eax, 7
+  inc   ebp
+  cmp   ebp, 4
+  jnz   s2k_l2
+  
+  xchg  eax, edx
+  bswap eax
+  stosd
+  loop  s2k_l1
+  popad
+  ret
+  
 sbox:
   ; S-box 1
   db 0E4h, 0D1h, 02Fh, 0B8h, 03Ah, 06Ch, 059h, 007h

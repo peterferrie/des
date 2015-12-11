@@ -172,8 +172,8 @@ void permute (uint8_t ptbl[], void *input, des_blk *out) {
   uint8_t byte, bit, x, t;
   uint8_t *p=ptbl, *in=(uint8_t*)input;
   
-	memset (out, 0, 8);
-	
+  memset (out, 0, 8);
+  
   ob = p[1];
   p  = &p[2];
   
@@ -226,21 +226,23 @@ uint32_t des_f (uint32_t *x, des_blk *key) {
 
 void des_setkey (des_ctx *ctx, void *input)
 {
-  int     rnd;
-  des_blk *k;
+  uint32_t rnd;
+  des_blk *k, *ks;
   des_blk k1, k2;
+  
+  ks=&ctx->keys[0];
   
   permute (pc1_permtab, input, &k1);
   
-  for (rnd=0; rnd<DES_ROUNDS; rnd++)
+  for (rnd=0x7EFC; rnd>0; rnd >>= 1)
   {
     permute (shiftkey_permtab, &k1, &k2);
     k=&k2;
-    if (ROTTABLE & (1 << rnd)) {
+    if (rnd & 1) {
       permute (shiftkey_permtab, &k2, &k1);
       k=&k1;
     }
-    permute (pc2_permtab, k, &ctx->keys[rnd]);
+    permute (pc2_permtab, k, ks++);
     memcpy (k1.v8, k->v8, DES_BLK_LEN);
   }
 }

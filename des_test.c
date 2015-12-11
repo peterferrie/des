@@ -284,6 +284,13 @@ int main (int argc, char *argv[])
   int i, test=0, crypt=DES_ENCRYPT;
   char *in=NULL, *out=NULL, *pwd="password";
   uint8_t lm[32];
+  uint32_t x=0x7EFC;
+  
+  /*for (i=0; i<16; i++) {
+    printf ("\n%08X %s", x, (x & 1) ? "Yes" : "No");
+    x >>= 1;
+  }
+  return 0;*/
   
   // for each argument
   for (i=1; i<argc; i++)
