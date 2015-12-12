@@ -712,23 +712,23 @@ _str$ = 8						; size = 4
 _key$ = 12						; size = 4
 _des_str2key PROC					; COMDAT
 ; File f:\gh\des\des.c
-; Line 228
+; Line 132
 	push	ebp
 	mov	ebp, esp
 	push	ecx
 	push	ebx
 	push	esi
 	push	edi
-; Line 233
+; Line 137
 	xor	edi, edi
 	mov	esi, -16711936				; ff00ff00H
 	mov	edx, 16711935				; 00ff00ffH
 $LL14@des_str2ke:
-; Line 234
+; Line 138
 	mov	eax, edi
 	imul	eax, 3
 	add	eax, DWORD PTR _str$[ebp]
-; Line 235
+; Line 139
 	mov	eax, DWORD PTR [eax]
 	mov	ecx, eax
 	ror	ecx, 8
@@ -736,28 +736,28 @@ $LL14@des_str2ke:
 	rol	eax, 8
 	and	eax, edx
 	or	ecx, eax
-; Line 236
+; Line 140
 	cmp	edi, 1
 	jne	SHORT $LN4@des_str2ke
-; Line 237
+; Line 141
 	rol	ecx, 4
 $LN4@des_str2ke:
-; Line 239
+; Line 143
 	xor	eax, eax
 	mov	DWORD PTR tv142[ebp], 4
 $LL3@des_str2ke:
-; Line 241
+; Line 145
 	mov	ebx, ecx
 	and	ebx, -16777217				; feffffffH
 	or	ebx, eax
 	shr	ebx, 24					; 00000018H
 	shl	eax, 8
 	or	eax, ebx
-; Line 242
+; Line 146
 	shl	ecx, 7
 	dec	DWORD PTR tv142[ebp]
 	jne	SHORT $LL3@des_str2ke
-; Line 244
+; Line 148
 	mov	ecx, eax
 	ror	ecx, 8
 	and	ecx, esi
@@ -772,7 +772,7 @@ $LL3@des_str2ke:
 	pop	edi
 	pop	esi
 	pop	ebx
-; Line 246
+; Line 150
 	leave
 	ret	0
 _des_str2key ENDP
@@ -787,38 +787,38 @@ _ptbl$ = 8						; size = 4
 _input$ = 12						; size = 4
 _out$ = 16						; size = 4
 _permute PROC						; COMDAT
-; Line 249
+; Line 154
 	push	ebp
 	mov	ebp, esp
 	push	ecx
 	push	esi
 	push	edi
-; Line 256
+; Line 160
 	mov	edi, DWORD PTR _out$[ebp]
 	xor	eax, eax
 	stosd
 	stosd
-; Line 258
+; Line 163
 	mov	eax, DWORD PTR _ptbl$[ebp]
 	mov	cl, BYTE PTR [eax]
 	lea	esi, DWORD PTR [eax+1]
-; Line 260
+; Line 166
 	test	cl, cl
 	je	SHORT $LN5@permute
-; Line 256
+; Line 160
 	mov	edi, DWORD PTR _out$[ebp]
 	movzx	eax, cl
 	mov	DWORD PTR tv69[ebp], eax
 	push	ebx
 $LL14@permute:
-; Line 261
+; Line 168
 	xor	dl, dl
 	mov	DWORD PTR tv64[ebp], 8
 $LL4@permute:
-; Line 263
+; Line 172
 	mov	al, BYTE PTR [esi]
 	dec	al
-; Line 265
+; Line 174
 	movzx	eax, al
 	mov	ecx, eax
 	and	ecx, 7
@@ -831,13 +831,13 @@ $LL4@permute:
 	add	dl, dl
 	test	bl, al
 	je	SHORT $LN3@permute
-; Line 266
+; Line 175
 	or	dl, 1
 $LN3@permute:
-; Line 262
+; Line 170
 	dec	DWORD PTR tv64[ebp]
 	jne	SHORT $LL4@permute
-; Line 269
+; Line 178
 	mov	BYTE PTR [edi], dl
 	inc	edi
 	dec	DWORD PTR tv69[ebp]
@@ -846,7 +846,7 @@ $LN3@permute:
 $LN5@permute:
 	pop	edi
 	pop	esi
-; Line 271
+; Line 180
 	leave
 	ret	0
 _permute ENDP
@@ -861,21 +861,21 @@ _t$ = -4						; size = 4
 _x$ = 8							; size = 4
 _key$ = 12						; size = 4
 _des_f	PROC						; COMDAT
-; Line 275
+; Line 184
 	push	ebp
 	mov	ebp, esp
 	sub	esp, 16					; 00000010H
 	push	ebx
 	push	esi
 	push	edi
-; Line 282
+; Line 191
 	lea	eax, DWORD PTR _t0$[ebp]
 	push	eax
 	push	DWORD PTR _x$[ebp]
 	xor	edi, edi
 	push	OFFSET _e_permtab
 	call	_permute
-; Line 285
+; Line 194
 	mov	ecx, DWORD PTR _key$[ebp]
 	add	esp, 12					; 0000000cH
 	lea	eax, DWORD PTR _t0$[ebp]
@@ -884,13 +884,13 @@ _des_f	PROC						; COMDAT
 	sub	ecx, edx
 	pop	esi
 $LL6@des_f:
-; Line 286
+; Line 195
 	mov	dl, BYTE PTR [ecx+eax]
 	xor	BYTE PTR [eax], dl
 	inc	eax
 	dec	esi
 	jne	SHORT $LL6@des_f
-; Line 289
+; Line 198
 	lea	eax, DWORD PTR _t1$[ebp]
 	push	eax
 	lea	eax, DWORD PTR _t0$[ebp]
@@ -899,18 +899,18 @@ $LL6@des_f:
 	call	_permute
 	add	esp, 12					; 0000000cH
 	push	8
-; Line 290
+; Line 199
 	mov	esi, OFFSET _sbox
 	lea	eax, DWORD PTR _t1$[ebp]
 	pop	ebx
 $LL3@des_f:
-; Line 294
+; Line 203
 	mov	cl, BYTE PTR [eax]
-; Line 295
+; Line 204
 	movzx	edx, cl
 	shr	edx, 1
 	mov	dl, BYTE PTR [edx+esi]
-; Line 296
+; Line 205
 	test	cl, 1
 	je	SHORT $LN9@des_f
 	and	dl, 15					; 0000000fH
@@ -918,17 +918,17 @@ $LL3@des_f:
 $LN9@des_f:
 	shr	dl, 4
 $LN10@des_f:
-; Line 297
+; Line 206
 	shl	edi, 4
-; Line 298
+; Line 207
 	movzx	ecx, dl
 	or	edi, ecx
-; Line 299
+; Line 208
 	add	esi, 32					; 00000020H
 	inc	eax
 	dec	ebx
 	jne	SHORT $LL3@des_f
-; Line 301
+; Line 210
 	mov	eax, edi
 	ror	eax, 8
 	and	eax, -16711936				; ff00ff00H
@@ -936,20 +936,20 @@ $LN10@des_f:
 	and	edi, 16711935				; 00ff00ffH
 	or	eax, edi
 	mov	DWORD PTR _t$[ebp], eax
-; Line 303
+; Line 212
 	lea	eax, DWORD PTR _t0$[ebp]
 	push	eax
 	lea	eax, DWORD PTR _t$[ebp]
 	push	eax
 	push	OFFSET _p_permtab
 	call	_permute
-; Line 304
+; Line 213
 	mov	eax, DWORD PTR _t0$[ebp]
 	add	esp, 12					; 0000000cH
 	pop	edi
 	pop	esi
 	pop	ebx
-; Line 305
+; Line 214
 	leave
 	ret	0
 _des_f	ENDP
@@ -964,35 +964,35 @@ _ks$ = 8						; size = 4
 _ctx$ = 8						; size = 4
 _input$ = 12						; size = 4
 _des_setkey PROC					; COMDAT
-; Line 309
+; Line 218
 	push	ebp
 	mov	ebp, esp
 	sub	esp, 16					; 00000010H
-; Line 314
+; Line 223
 	mov	eax, DWORD PTR _ctx$[ebp]
 	push	ebx
 	push	esi
 	push	edi
 	mov	DWORD PTR _ks$[ebp], eax
-; Line 316
+; Line 225
 	lea	eax, DWORD PTR _k1$[ebp]
 	push	eax
 	push	DWORD PTR _input$[ebp]
 	push	OFFSET _pc1_permtab
 	call	_permute
 	add	esp, 12					; 0000000cH
-; Line 318
+; Line 227
 	xor	ebx, ebx
 	mov	edi, OFFSET _shiftkey_permtab
 $LL4@des_setkey:
-; Line 320
+; Line 229
 	lea	eax, DWORD PTR _k2$[ebp]
 	push	eax
 	lea	eax, DWORD PTR _k1$[ebp]
 	push	eax
 	push	edi
 	call	_permute
-; Line 322
+; Line 231
 	xor	eax, eax
 	inc	eax
 	mov	ecx, ebx
@@ -1001,7 +1001,7 @@ $LL4@des_setkey:
 	lea	esi, DWORD PTR _k2$[ebp]
 	test	eax, 32508				; 00007efcH
 	je	SHORT $LN1@des_setkey
-; Line 323
+; Line 232
 	lea	eax, DWORD PTR _k1$[ebp]
 	push	eax
 	mov	eax, esi
@@ -1009,15 +1009,15 @@ $LL4@des_setkey:
 	push	edi
 	call	_permute
 	add	esp, 12					; 0000000cH
-; Line 324
+; Line 233
 	lea	esi, DWORD PTR _k1$[ebp]
 $LN1@des_setkey:
-; Line 326
+; Line 235
 	push	DWORD PTR _ks$[ebp]
 	push	esi
 	push	OFFSET _pc2_permtab
 	call	_permute
-; Line 327
+; Line 236
 	mov	eax, DWORD PTR [esi]
 	add	DWORD PTR _ks$[ebp], 8
 	add	esp, 12					; 0000000cH
@@ -1030,7 +1030,7 @@ $LN1@des_setkey:
 	pop	edi
 	pop	esi
 	pop	ebx
-; Line 329
+; Line 238
 	leave
 	ret	0
 _des_setkey ENDP
@@ -1047,34 +1047,34 @@ _out$ = 16						; size = 4
 tv94 = 20						; size = 4
 _enc$ = 20						; size = 4
 _des_enc PROC						; COMDAT
-; Line 333
+; Line 242
 	push	ebp
 	mov	ebp, esp
 	push	ecx
 	push	ecx
 	push	ebx
-; Line 334
+; Line 243
 	xor	ebx, ebx
 	push	esi
 	inc	ebx
 	push	edi
-; Line 338
+; Line 247
 	mov	edi, DWORD PTR _ctx$[ebp]
-; Line 340
+; Line 249
 	cmp	DWORD PTR _enc$[ebp], ebx
 	jne	SHORT $LN4@des_enc
-; Line 341
+; Line 250
 	or	ebx, -1
-; Line 342
+; Line 251
 	add	edi, 120				; 00000078H
 $LN4@des_enc:
-; Line 345
+; Line 254
 	lea	eax, DWORD PTR _t0$[ebp]
 	push	eax
 	push	DWORD PTR _in$[ebp]
 	push	OFFSET _ip_permtab
 	call	_permute
-; Line 348
+; Line 257
 	mov	eax, DWORD PTR _t0$[ebp+4]
 	mov	esi, DWORD PTR _t0$[ebp]
 	add	esp, 12					; 0000000cH
@@ -1082,22 +1082,22 @@ $LN4@des_enc:
 	shl	ebx, 3
 	mov	DWORD PTR tv94[ebp], 16			; 00000010H
 $LL3@des_enc:
-; Line 352
+; Line 261
 	lea	eax, DWORD PTR _R$[ebp]
 	push	edi
 	push	eax
 	call	_des_f
 	xor	eax, esi
-; Line 355
+; Line 264
 	mov	esi, DWORD PTR _R$[ebp]
 	pop	ecx
-; Line 357
+; Line 266
 	add	edi, ebx
 	dec	DWORD PTR tv94[ebp]
 	pop	ecx
 	mov	DWORD PTR _R$[ebp], eax
 	jne	SHORT $LL3@des_enc
-; Line 363
+; Line 272
 	push	DWORD PTR _out$[ebp]
 	mov	DWORD PTR _t0$[ebp], eax
 	lea	eax, DWORD PTR _t0$[ebp]
@@ -1109,7 +1109,7 @@ $LL3@des_enc:
 	pop	edi
 	pop	esi
 	pop	ebx
-; Line 364
+; Line 273
 	leave
 	ret	0
 _des_enc ENDP

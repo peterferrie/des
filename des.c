@@ -150,27 +150,32 @@ void des_str2key (void *str, des_blk* key) {
 }
 
 /*********************************************************/
-void permute (uint8_t ptbl[], void *input, des_blk *out) {
-  uint8_t ob;
-  uint8_t byte, bit, x, t;
+void permute (uint8_t ptbl[], void *input, des_blk *out) 
+{
+  uint8_t i, j, x, t, ob;
   des_blk *in=(des_blk*)input;
   uint8_t *p=(uint8_t*)ptbl;
   
   // we always expect out to absorb 8 bytes
   memset (out->v8, 0, 8);
   
+  // load destination buffer in bytes
   ob = *p++;
   
-  for (byte=0; byte<ob; ++byte) {
+  // for i=0 to output bytes
+  for (i=0; i<ob; i++) 
+  {
     t=0;
-    for (bit=0; bit<8; ++bit) {
+    // permutate 8-bits
+    for (j=0; j<8; j++) 
+    {
       x = *p++ - 1;
       t <<= 1;
       if ((in->v8[x / 8]) & (0x80 >> (x & 7)) ){
         t |= 0x01;
       }
     }
-    out->v8[byte]=t;
+    out->v8[i]=t;
   }
 }
 
