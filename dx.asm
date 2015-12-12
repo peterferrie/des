@@ -1,7 +1,7 @@
 
 
 ; DES in x86 assembly
-; 1,079 bytes
+; 1,077 bytes
 ; Odzhan
 
   bits 32
@@ -216,12 +216,13 @@ sk_l2:
 _des_encx:
 des_encx:
   pushad
-
-  mov    eax, [esp+32+ 4] ; ctx
-  mov    ebx, [esp+32+ 8] ; in
-  mov    ebp, [esp+32+12] ; out
-  mov    ecx, [esp+32+16] ; enc
-
+  mov    ebp, esp
+  
+  mov    eax, [ebp+32+ 4] ; ctx
+  mov    ebx, [ebp+32+ 8] ; in
+  mov    ecx, [ebp+32+16] ; enc
+  mov    ebp, [ebp+32+12] ; out
+  
   ; permute (ip_permtab, in, &t0);
   push   ecx
   push   ecx
