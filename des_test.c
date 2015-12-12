@@ -288,18 +288,19 @@ uint32_t *tbls[]=
   pc2_permtab
   splitin6bitword_permtab
   shiftkey_permtab }; */
-
-/*
-void print_tbls (void)
+  
+void print_tbl (uint8_t *tbl, uint32_t len)
 {
-  int i;
-  for (i=0; i<sizeof(shiftkey_permtab); i++) {
-    printf ("0x%02x, ", shiftkey_permtab[i]);
-    if (i==0) putchar('\n');
-    if (i==0) i++;
-    if (((i-1) % 8)==0) putchar('\n');
+  uint32_t i;
+  uint8_t *p=tbl;
+  
+  printf ("\n0x%02x,", *p++);
+  
+  for (i=0; i<len-1; i++) {
+    if ((i % 8)==0) putchar('\n');
+    printf ("0x%02x, ", *p++ - 1);
   }
-}*/
+}
 
 int main (int argc, char *argv[])
 {
@@ -309,10 +310,15 @@ int main (int argc, char *argv[])
   uint8_t lm[32];
   uint32_t x=0x7EFC;
   
-  /*for (i=0; i<16; i++) {
-    printf ("\n%08X %s", x, (x & 1) ? "Yes" : "No");
-    x >>= 1;
-  }
+  /*print_tbl (e_permtab, sizeof(e_permtab));
+  print_tbl (p_permtab, sizeof(p_permtab));
+  print_tbl (ip_permtab, sizeof(ip_permtab));
+  print_tbl (inv_ip_permtab, sizeof(inv_ip_permtab));
+  print_tbl (pc1_permtab, sizeof(pc1_permtab));
+  print_tbl (pc2_permtab, sizeof(pc2_permtab));
+  print_tbl (splitin6bitword_permtab, sizeof(splitin6bitword_permtab));
+  print_tbl (shiftkey_permtab, sizeof(shiftkey_permtab));
+  
   return 0;*/
   
   // for each argument
