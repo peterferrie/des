@@ -278,6 +278,29 @@ void usage (void)
   exit (0);
 }
 
+/*
+uint32_t *tbls[]=
+{ e_permtab
+  p_permtab
+  ip_permtab
+  inv_ip_permtab
+  pc1_permtab
+  pc2_permtab
+  splitin6bitword_permtab
+  shiftkey_permtab }; */
+
+/*
+void print_tbls (void)
+{
+  int i;
+  for (i=0; i<sizeof(shiftkey_permtab); i++) {
+    printf ("0x%02x, ", shiftkey_permtab[i]);
+    if (i==0) putchar('\n');
+    if (i==0) i++;
+    if (((i-1) % 8)==0) putchar('\n');
+  }
+}*/
+
 int main (int argc, char *argv[])
 {
   char opt;
