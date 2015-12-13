@@ -1,7 +1,7 @@
 
 
 ; DES in x86 assembly
-; 1,086 bytes
+; 1,088 bytes
 ; Odzhan
 
   bits 32
@@ -20,7 +20,6 @@ endstruc
   
   %ifndef BIN
     global _des_str2keyx
-    global _permutex
     global _des_setkeyx
     global _des_encx
   %endif
@@ -38,7 +37,7 @@ permutex:
     stosd
     pop    edi
     
-    ; ob=ptable[1];
+    ; ob=*p++;
     lodsb
     xchg   eax, ecx
 p_l1:
@@ -68,7 +67,7 @@ p_l3:
     cmp    ebp, 8
     jnz    p_l2
     xchg   eax, edx
-    ; out[byte]=t;
+    ; out->v8[i]=t;
     stosb
     pop    ecx
     loop   p_l1
@@ -218,6 +217,7 @@ des_encx:
     call   permutex
     
     mov    esi, [ebp+32+ 4] ; esi=ctx
+    mov    ebx, esp
     
     mov    L, [edi]
     mov    R, [edi+4]
