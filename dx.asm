@@ -1,7 +1,7 @@
 
 
 ; DES in x86 assembly
-; 1,096 bytes
+; 1,086 bytes
 ; Odzhan
 
   bits 32
@@ -31,10 +31,6 @@ endstruc
 _permutex:
 permutex:
     pushad
-    
-    ;mov    esi, [esp+32+ 4] ; ptbl
-    ;mov    ebx, [esp+32+ 8] ; input
-    ;mov    edi, [esp+32+12] ; out
     
     xor    eax, eax
     push   edi
@@ -88,14 +84,10 @@ des_fx:
     pushad
     cld
 
-    ;mov    eax, [esp+32+4+4] ; x
-    ;mov    esi, [esp+32+8+4] ; key
-    
     ; put x in ebx
     xchg   ebx, eax
     ; put key in eax
     xchg   eax, esi
-    xor    ecx, ecx
     
     ; allocate 16 bytes
     sub    esp, 16
@@ -108,13 +100,11 @@ des_fx:
     
     ; put key in esi
     xchg   eax, esi
-    mov    cl, 7
-df_l1:
-    lodsb
-    xor    al, [edi]
-    stosb
-    loop   df_l1
-    
+    lodsd
+    xor    [edi], eax
+    lodsd
+    xor    [edi+4], eax
+
     ; permute (splitin6bitword_permtab, &t0, &t1);
     mov    esi, splitin6bitword_permtab
     mov    ebx, esp
@@ -123,7 +113,8 @@ df_l1:
     
     mov    esi, ebp
     mov    ebx, sbox
-    mov    cl, 8
+    push   8
+    pop    ecx
     xor    edx, edx
 df_l2:
     push   ecx
@@ -171,28 +162,28 @@ des_setkey:
     ; permute (pc1_permtab, input, &k1);
     mov    esi, pc1_permtab
     mov    edi, esp
-    call   edx ; permutex
+    call   edx               ; permutex
     xor    ecx, ecx
 sk_l1:
     ; permute (shiftkey_permtab, &k1, &k2);
-    mov    ebx, esp ; k1
-    lea    edi, [ebx+8] ; k2
+    mov    ebx, esp          ; ebx=k1
+    lea    edi, [ebx+8]      ; edi=k2
     mov    esi, shiftkey_permtab
-    call   edx ; permutex
+    call   edx               ; permutex
     push   1
     pop    eax
     shl    eax, cl
     test   eax, 07EFCh
-    xchg   ebx, edi    ; 
+    xchg   ebx, edi          ; ebx=k2, edi=k1
     jz     sk_l2
     ; permute (shiftkey_permtab, &k2, &k1);
-    call   edx ; permutex
-    mov    ebx, edi ; now k1 is k
+    call   edx               ; permutex
+    mov    ebx, edi          ; ebx=k1
 sk_l2:
     ; permute (pc2_permtab, k, &ctx->keys[rnd]);
     mov    esi, pc2_permtab
     mov    edi, ebp
-    call   edx ; permutex
+    call   edx               ; permutex
     ; memcpy (k1.v8, k->v8, DES_BLK_LEN);
     mov    esi, ebx
     mov    edi, esp
@@ -208,7 +199,7 @@ sk_l2:
     popad
     ret
   
-%define L ebx
+%define L ebp
 %define R edx
   
 _des_encx:
@@ -216,26 +207,20 @@ des_encx:
     pushad
     mov    ebp, esp
     
-    mov    eax, [ebp+32+ 4] ; ctx
     mov    ebx, [ebp+32+ 8] ; in
     mov    ecx, [ebp+32+16] ; enc
-    mov    ebp, [ebp+32+12] ; out
     
     ; permute (ip_permtab, in, &t0);
     push   ecx
     push   ecx
     mov    edi, esp
-    push   eax
     mov    esi, ip_permtab
     call   permutex
     
-    mov    esi, edi
-    lodsd
-    xchg   eax, L
-    lodsd
-    xchg   eax, R
-    pop    esi
-    mov    edi, ebp
+    mov    esi, [ebp+32+ 4] ; esi=ctx
+    
+    mov    L, [edi]
+    mov    R, [edi+4]
     
     test   ecx, ecx
     mov    cl, 16
@@ -260,9 +245,9 @@ de_l1:
     cld
     
     ; permute (inv_ip_permtab, &t0, out);
-    mov    dword[esp], R
-    mov    dword[esp+4], L
-    mov    ebx, esp
+    mov    dword[ebx], R
+    mov    dword[ebx+4], L
+    mov    edi, [esp+32+12+8] ; edi=out
     mov    esi, inv_ip_permtab
     call   permutex
     pop    eax
