@@ -358,20 +358,19 @@ CONST	SEGMENT
 CONST	ENDS
 ;	COMDAT _run_tests
 _TEXT	SEGMENT
-_ctx$ = -68						; size = 136
-_key$ = 68						; size = 8
-_pt2$ = 76						; size = 8
-_ct1$ = 84						; size = 8
-_ct2$ = 92						; size = 8
-_pt1$ = 100						; size = 8
-tv244 = 108						; size = 4
-_fails$ = 112						; size = 4
-tv187 = 116						; size = 4
+_ctx$ = -180						; size = 136
+_key$ = -44						; size = 8
+_pt1$ = -36						; size = 8
+_ct2$ = -28						; size = 8
+_ct1$ = -20						; size = 8
+tv240 = -12						; size = 4
+_fails$ = -8						; size = 4
+tv187 = -4						; size = 4
 _run_tests PROC						; COMDAT
 ; Line 113
 	push	ebp
-	lea	ebp, DWORD PTR [esp-120]
-	sub	esp, 188				; 000000bcH
+	mov	ebp, esp
+	sub	esp, 180				; 000000b4H
 	push	ebx
 	push	esi
 ; Line 114
@@ -379,7 +378,7 @@ _run_tests PROC						; COMDAT
 	push	edi
 	mov	DWORD PTR _fails$[ebp], ebx
 	mov	DWORD PTR tv187[ebp], 1
-	mov	DWORD PTR tv244[ebp], 5
+	mov	DWORD PTR tv240[ebp], 5
 $LL11@run_tests:
 ; Line 121
 	push	DWORD PTR _test_keys[ebx]
@@ -403,7 +402,7 @@ $LL11@run_tests:
 	lea	eax, DWORD PTR _ctx$[ebp]
 	push	eax
 	call	_des_setkeyx
-; Line 127
+; Line 132
 	push	0
 	lea	eax, DWORD PTR _ct2$[ebp]
 	push	eax
@@ -412,34 +411,25 @@ $LL11@run_tests:
 	lea	eax, DWORD PTR _ctx$[ebp]
 	push	eax
 	call	_des_encx
-; Line 128
-	push	1
-	lea	eax, DWORD PTR _pt2$[ebp]
-	push	eax
-	lea	eax, DWORD PTR _ct2$[ebp]
-	push	eax
-	lea	eax, DWORD PTR _ctx$[ebp]
-	push	eax
-	call	_des_encx
-	add	esp, 64					; 00000040H
-; Line 130
+	add	esp, 48					; 00000030H
+; Line 135
 	mov	ecx, esi
-	lea	edi, DWORD PTR _pt2$[ebp]
-	lea	esi, DWORD PTR _pt1$[ebp]
+	lea	edi, DWORD PTR _ct2$[ebp]
+	lea	esi, DWORD PTR _ct1$[ebp]
 	xor	eax, eax
 	repe cmpsb
 	jne	SHORT $LN2@run_tests
-; Line 132
-	push	DWORD PTR _pt2$[ebp]
-	push	DWORD PTR _pt1$[ebp]
+; Line 137
+	push	DWORD PTR _ct2$[ebp]
+	push	DWORD PTR _ct1$[ebp]
 	push	DWORD PTR tv187[ebp]
 	push	OFFSET ??_C@_0DB@GDPCJFKD@?6Passed?5Encryption?1Decryption?5te@
 	call	_printf
 	add	esp, 16					; 00000010H
-; Line 133
+; Line 138
 	jmp	SHORT $LN4@run_tests
 $LN2@run_tests:
-; Line 138
+; Line 143
 	push	DWORD PTR _pt1$[ebp+4]
 	inc	DWORD PTR _fails$[ebp]
 	push	DWORD PTR _pt1$[ebp]
@@ -455,15 +445,14 @@ $LN4@run_tests:
 ; Line 119
 	add	ebx, 4
 	inc	DWORD PTR tv187[ebp]
-	dec	DWORD PTR tv244[ebp]
+	dec	DWORD PTR tv240[ebp]
 	jne	$LL11@run_tests
-; Line 142
+; Line 147
 	mov	eax, DWORD PTR _fails$[ebp]
 	pop	edi
 	pop	esi
 	pop	ebx
-; Line 143
-	add	ebp, 120				; 00000078H
+; Line 148
 	leave
 	ret	0
 _run_tests ENDP
@@ -493,29 +482,29 @@ _fs_complete$ = 8					; size = 8
 _fs_total$ = 16						; size = 8
 _progress PROC						; COMDAT
 ; File f:\gh\des\des_test.c
-; Line 146
+; Line 151
 	push	ebp
 	mov	ebp, esp
 	sub	esp, 28					; 0000001cH
 	push	edi
-; Line 147
+; Line 152
 	xor	edi, edi
 	mov	DWORD PTR _minutes$[ebp], edi
 	mov	DWORD PTR _seconds$[ebp], edi
 	mov	DWORD PTR _speed$[ebp], edi
-; Line 151
+; Line 156
 	cmp	DWORD PTR ?start@?1??progress@@9@9, edi
 	jne	SHORT $LN2@progress
-; Line 152
+; Line 157
 	push	edi
 	call	__time64
 	pop	ecx
 	mov	DWORD PTR ?start@?1??progress@@9@9, eax
-; Line 153
+; Line 158
 	jmp	$LN3@progress
 $LN2@progress:
 	push	ebx
-; Line 156
+; Line 161
 	mov	ebx, DWORD PTR _fs_complete$[ebp+4]
 	push	esi
 	mov	esi, DWORD PTR _fs_complete$[ebp]
@@ -529,7 +518,7 @@ $LN2@progress:
 	push	edx
 	push	eax
 	call	__aulldiv
-; Line 158
+; Line 163
 	push	edi
 	mov	DWORD PTR _pct$[ebp], eax
 	mov	DWORD PTR _pct$[ebp+4], edx
@@ -538,9 +527,9 @@ $LN2@progress:
 	mov	DWORD PTR $T5902[ebp+4], edx
 	pop	ecx
 	mov	DWORD PTR _total$[ebp], eax
-; Line 160
+; Line 165
 	je	SHORT $LN9@progress
-; Line 162
+; Line 167
 	mov	ecx, DWORD PTR _fs_total$[ebp]
 	mov	edx, DWORD PTR _fs_total$[ebp+4]
 	xor	eax, eax
@@ -557,7 +546,7 @@ $LN2@progress:
 	push	eax
 	call	__aulldiv
 	mov	DWORD PTR _avg$[ebp], eax
-; Line 163
+; Line 168
 	xor	eax, eax
 	push	eax
 	push	DWORD PTR _total$[ebp]
@@ -565,17 +554,17 @@ $LN2@progress:
 	push	esi
 	call	__aulldiv
 	mov	DWORD PTR _speed$[ebp], eax
-; Line 165
+; Line 170
 	mov	eax, DWORD PTR _avg$[ebp]
 	push	60					; 0000003cH
 	xor	edx, edx
 	pop	ecx
 	div	ecx
 	mov	DWORD PTR _minutes$[ebp], eax
-; Line 166
+; Line 171
 	mov	DWORD PTR _seconds$[ebp], edx
 $LN9@progress:
-; Line 169
+; Line 174
 	mov	eax, DWORD PTR _speed$[ebp]
 	xor	edx, edx
 	mov	esi, 1000				; 000003e8H
@@ -619,7 +608,7 @@ $LN9@progress:
 	pop	ebx
 $LN3@progress:
 	pop	edi
-; Line 170
+; Line 175
 	leave
 	ret	0
 _progress ENDP
@@ -631,7 +620,7 @@ _TEXT	SEGMENT
 _out$ = 8						; size = 4
 _str$ = 12						; size = 4
 _DES_genkey PROC					; COMDAT
-; Line 175
+; Line 180
 	ret	0
 _DES_genkey ENDP
 _TEXT	ENDS
@@ -688,12 +677,12 @@ _outfile$ = 12						; size = 4
 _key$ = 16						; size = 4
 _crypt$ = 20						; size = 4
 _DES_file PROC						; COMDAT
-; Line 179
+; Line 184
 	push	ebp
 	mov	ebp, esp
 	sub	esp, 728				; 000002d8H
 	push	ebx
-; Line 189
+; Line 194
 	push	OFFSET ??_C@_02JDPG@rb?$AA@
 	push	DWORD PTR _infile$[ebp]
 	xor	ebx, ebx
@@ -703,34 +692,34 @@ _DES_file PROC						; COMDAT
 	pop	ecx
 	pop	ecx
 	mov	DWORD PTR _in$[ebp], eax
-; Line 191
+; Line 196
 	cmp	eax, ebx
 	je	$LN17@DES_file
-; Line 193
+; Line 198
 	push	OFFSET ??_C@_02GMLFBBN@wb?$AA@
 	push	DWORD PTR _outfile$[ebp]
 	call	_fopen
 	pop	ecx
 	pop	ecx
 	mov	DWORD PTR _out$[ebp], eax
-; Line 195
+; Line 200
 	cmp	eax, ebx
 	je	$LN16@DES_file
-; Line 197
+; Line 202
 	push	esi
 	push	edi
 	lea	eax, DWORD PTR _st$[ebp]
 	push	eax
 	push	DWORD PTR _infile$[ebp]
 	call	__stat64i32
-; Line 198
+; Line 203
 	mov	eax, DWORD PTR _st$[ebp+20]
 	mov	DWORD PTR _total$[ebp], eax
-; Line 200
+; Line 205
 	xor	eax, eax
 	lea	edi, DWORD PTR _iv$[ebp]
 	stosd
-; Line 201
+; Line 206
 	mov	esi, 320				; 00000140H
 	push	esi
 	stosd
@@ -738,13 +727,13 @@ _DES_file PROC						; COMDAT
 	push	ebx
 	push	eax
 	call	_memset
-; Line 202
+; Line 207
 	push	esi
 	lea	eax, DWORD PTR _buf_out$[ebp]
 	push	ebx
 	push	eax
 	call	_memset
-; Line 206
+; Line 211
 	push	DWORD PTR _in$[ebp]
 	lea	edi, DWORD PTR [esi-64]
 	push	edi
@@ -755,9 +744,9 @@ _DES_file PROC						; COMDAT
 	add	esp, 48					; 00000030H
 	jmp	$LN38@DES_file
 $LL15@DES_file:
-; Line 207
+; Line 212
 	add	DWORD PTR _cmp$[ebp], esi
-; Line 208
+; Line 213
 	mov	ecx, 1000000				; 000f4240H
 	cmp	DWORD PTR _cmp$[ebp], ecx
 	jbe	SHORT $LN11@DES_file
@@ -771,7 +760,7 @@ $LN11@DES_file:
 	cmp	eax, DWORD PTR _total$[ebp]
 	jne	SHORT $LN13@DES_file
 $LN36@DES_file:
-; Line 209
+; Line 214
 	push	ebx
 	push	DWORD PTR _total$[ebp]
 	push	ebx
@@ -779,15 +768,15 @@ $LN36@DES_file:
 	call	_progress
 	add	esp, 16					; 00000010H
 $LN13@DES_file:
-; Line 212
+; Line 217
 	cmp	esi, edi
 	jae	SHORT $LN30@DES_file
-; Line 214
+; Line 219
 	mov	DWORD PTR _last$[ebp], 1
-; Line 215
+; Line 220
 	cmp	DWORD PTR _crypt$[ebp], ebx
 	jne	SHORT $LN32@DES_file
-; Line 217
+; Line 222
 	mov	eax, edi
 	sub	eax, esi
 	push	eax
@@ -795,38 +784,38 @@ $LN13@DES_file:
 	push	ebx
 	push	eax
 	call	_memset
-; Line 218
+; Line 223
 	mov	eax, esi
 	add	esp, 12					; 0000000cH
 	and	eax, 7
-; Line 219
+; Line 224
 	je	SHORT $LN34@DES_file
-; Line 221
+; Line 226
 	push	8
 	pop	ebx
 	sub	ebx, eax
-; Line 223
+; Line 228
 	cmp	eax, 8
 	jae	SHORT $LN34@DES_file
-; Line 221
+; Line 226
 	mov	DWORD PTR tv197[ebp], ebx
 $LL7@DES_file:
-; Line 224
+; Line 229
 	push	OFFSET ??_C@_08NMEFIIAM@?6padding?$AA@
 	call	_printf
-; Line 225
+; Line 230
 	mov	BYTE PTR _buf_in$[ebp+esi], bl
 	inc	esi
 	dec	DWORD PTR tv197[ebp]
 	pop	ecx
 	jne	SHORT $LL7@DES_file
 $LN30@DES_file:
-; Line 230
+; Line 235
 	xor	ebx, ebx
 	cmp	DWORD PTR _crypt$[ebp], ebx
 	jne	SHORT $LN32@DES_file
 $LN34@DES_file:
-; Line 231
+; Line 236
 	lea	eax, DWORD PTR _iv$[ebp]
 	push	eax
 	push	esi
@@ -838,10 +827,10 @@ $LN34@DES_file:
 	push	eax
 	call	_des_cbc_enc
 	add	esp, 20					; 00000014H
-; Line 232
+; Line 237
 	jmp	SHORT $LN33@DES_file
 $LN32@DES_file:
-; Line 233
+; Line 238
 	lea	eax, DWORD PTR _iv$[ebp]
 	push	eax
 	push	esi
@@ -853,21 +842,21 @@ $LN32@DES_file:
 	push	eax
 	call	_des_cbc_dec
 	add	esp, 20					; 00000014H
-; Line 234
+; Line 239
 	cmp	DWORD PTR _last$[ebp], ebx
 	je	SHORT $LN33@DES_file
 	lea	ebx, DWORD PTR _buf_out$[ebp+esi-1]
 	cmp	BYTE PTR [ebx], 8
 	jae	SHORT $LN33@DES_file
-; Line 235
+; Line 240
 	push	OFFSET ??_C@_08BFDNMHJA@?6undoing?$AA@
 	call	_printf
-; Line 237
+; Line 242
 	movzx	eax, BYTE PTR [ebx]
 	pop	ecx
 	sub	esi, eax
 $LN33@DES_file:
-; Line 240
+; Line 245
 	push	DWORD PTR _out$[ebp]
 	lea	eax, DWORD PTR _buf_out$[ebp]
 	push	esi
@@ -883,37 +872,37 @@ $LN33@DES_file:
 	add	esp, 32					; 00000020H
 	xor	ebx, ebx
 $LN38@DES_file:
-; Line 206
+; Line 211
 	mov	esi, eax
 	cmp	esi, ebx
 	jne	$LL15@DES_file
-; Line 242
+; Line 247
 	push	DWORD PTR _out$[ebp]
 	call	_fclose
 	pop	ecx
 	pop	edi
 	pop	esi
-; Line 243
+; Line 248
 	jmp	SHORT $LN2@DES_file
 $LN16@DES_file:
-; Line 244
+; Line 249
 	push	OFFSET ??_C@_07CLGEINJ@fopen?$CI?$CJ?$AA@
 	call	_perror
 	pop	ecx
 $LN2@DES_file:
-; Line 246
+; Line 251
 	push	DWORD PTR _in$[ebp]
 	call	_fclose
-; Line 247
+; Line 252
 	jmp	SHORT $LN39@DES_file
 $LN17@DES_file:
-; Line 248
+; Line 253
 	push	OFFSET ??_C@_07CLGEINJ@fopen?$CI?$CJ?$AA@
 	call	_perror
 $LN39@DES_file:
 	pop	ecx
 	pop	ebx
-; Line 250
+; Line 255
 	leave
 	ret	0
 _DES_file ENDP
@@ -933,7 +922,7 @@ _argc$ = 8						; size = 4
 _argv$ = 12						; size = 4
 _i$ = 16						; size = 4
 _getparam PROC						; COMDAT
-; Line 255
+; Line 260
 	mov	eax, DWORD PTR _argv$[esp-4]
 	push	esi
 	mov	esi, DWORD PTR _i$[esp]
@@ -942,22 +931,22 @@ _getparam PROC						; COMDAT
 	mov	eax, DWORD PTR [ecx]
 	add	eax, 2
 	cmp	BYTE PTR [eax], 0
-; Line 256
+; Line 261
 	jne	SHORT $LN3@getparam
-; Line 258
+; Line 263
 	lea	eax, DWORD PTR [edx+1]
 	cmp	eax, DWORD PTR _argc$[esp]
 	jge	SHORT $LN1@getparam
-; Line 259
+; Line 264
 	mov	DWORD PTR [esi], eax
-; Line 260
+; Line 265
 	mov	eax, DWORD PTR [ecx+4]
 $LN3@getparam:
-; Line 264
+; Line 269
 	pop	esi
 	ret	0
 $LN1@getparam:
-; Line 262
+; Line 267
 	mov	ecx, DWORD PTR [ecx]
 	movsx	eax, BYTE PTR [ecx+1]
 	push	eax
@@ -966,7 +955,7 @@ $LN1@getparam:
 	push	OFFSET ??_C@_0BN@KLIHKBHM@?5?5?$FL?5?$CFc?$CFc?5requires?5parameter?6?$AA@
 	call	_printf
 	add	esp, 12					; 0000000cH
-; Line 263
+; Line 268
 	push	0
 	call	_exit
 $LN5@getparam:
@@ -1026,32 +1015,32 @@ CONST	ENDS
 ;	COMDAT _usage
 _TEXT	SEGMENT
 _usage	PROC						; COMDAT
-; Line 270
+; Line 275
 	push	OFFSET ??_C@_0DB@FIDMLMJG@?6?5?5usage?3?5DES_test?5?9k?5?$DMkey?$DO?5?9i?5?$DM@
 	call	_printf
-; Line 271
+; Line 276
 	mov	DWORD PTR [esp], OFFSET ??_C@_0BD@GBKBHDMF@?6?5?5?9k?5?$DMkey?$DO?5?5?5?5Key?$AA@
 	call	_printf
-; Line 272
+; Line 277
 	mov	DWORD PTR [esp], OFFSET ??_C@_0BK@POKPNFPB@?6?5?5?9i?5?$DMfile?$DO?5?5?5Input?5file?$AA@
 	call	_printf
-; Line 273
+; Line 278
 	mov	DWORD PTR [esp], OFFSET ??_C@_0BL@GGPMPLLK@?6?5?5?9o?5?$DMfile?$DO?5?5?5Output?5file?$AA@
 	call	_printf
-; Line 274
+; Line 279
 	mov	DWORD PTR [esp], OFFSET ??_C@_0BH@PJJLJKMJ@?6?5?5?9e?5?5?5?5?5?5?5?5?5?5Encrypt?$AA@
 	call	_printf
-; Line 275
+; Line 280
 	mov	DWORD PTR [esp], OFFSET ??_C@_0BH@OANEEOPF@?6?5?5?9d?5?5?5?5?5?5?5?5?5?5Decrypt?$AA@
 	call	_printf
-; Line 276
+; Line 281
 	mov	DWORD PTR [esp], OFFSET ??_C@_0BJ@PDNMABCH@?6?5?5?9x?5?5?5?5?5?5?5?5?5?5Run?5tests?$AA@
 	call	_printf
-; Line 277
+; Line 282
 	mov	DWORD PTR [esp], OFFSET ??_C@_0CD@FBFOFFDL@?6?5?5?9l?5?$DMpwd?$DO?5?5?5?5Create?5Lanman?5has@
 	call	_printf
 	pop	ecx
-; Line 278
+; Line 283
 	push	0
 	call	_exit
 $LN3@usage:
@@ -1082,19 +1071,19 @@ _s$ = 8							; size = 4
 _tbl$ = 12						; size = 4
 _len$ = 16						; size = 4
 _print_tbl PROC						; COMDAT
-; Line 402
+; Line 407
 	push	ebx
 	push	esi
-; Line 406
+; Line 411
 	mov	esi, DWORD PTR _tbl$[esp+4]
-; Line 407
+; Line 412
 	movzx	eax, BYTE PTR [esi+1]
 	push	edi
 	push	eax
 	push	DWORD PTR _s$[esp+12]
 	push	OFFSET ??_C@_0BD@LBHFKKJD@?6?$CFs?3?6?5?5db?5?50x?$CF02x?0?$AA@
 	call	_printf
-; Line 409
+; Line 414
 	mov	edi, DWORD PTR _len$[esp+20]
 	add	esp, 12					; 0000000cH
 	add	esi, 2
@@ -1102,14 +1091,14 @@ _print_tbl PROC						; COMDAT
 	add	edi, -2					; fffffffeH
 	je	SHORT $LN2@print_tbl
 $LL4@print_tbl:
-; Line 410
+; Line 415
 	test	bl, 7
 	jne	SHORT $LN1@print_tbl
 	push	OFFSET ??_C@_07JDFIIMLD@?6?5?5db?5?5?$AA@
 	call	_printf
 	pop	ecx
 $LN1@print_tbl:
-; Line 411
+; Line 416
 	movzx	eax, BYTE PTR [esi]
 	dec	eax
 	push	eax
@@ -1125,7 +1114,7 @@ $LN2@print_tbl:
 	pop	edi
 	pop	esi
 	pop	ebx
-; Line 414
+; Line 419
 	ret	0
 _print_tbl ENDP
 _TEXT	ENDS
@@ -1164,15 +1153,15 @@ _i$ = -4						; size = 4
 _argc$ = 8						; size = 4
 _argv$ = 12						; size = 4
 _main	PROC						; COMDAT
-; Line 417
+; Line 422
 	push	ebp
 	mov	ebp, esp
 	sub	esp, 56					; 00000038H
 	push	ebx
 	push	esi
-; Line 419
+; Line 424
 	xor	ecx, ecx
-; Line 436
+; Line 441
 	xor	ebx, ebx
 	push	edi
 	mov	edi, DWORD PTR _argc$[ebp]
@@ -1187,7 +1176,7 @@ _main	PROC						; COMDAT
 	jle	$LN6@main
 	mov	esi, DWORD PTR _argv$[ebp]
 $LL23@main:
-; Line 439
+; Line 444
 	mov	eax, DWORD PTR _i$[ebp]
 	mov	eax, DWORD PTR [esi+eax*4]
 	cmp	BYTE PTR [eax], 45			; 0000002dH
@@ -1195,7 +1184,7 @@ $LL23@main:
 	cmp	BYTE PTR [eax+1], 47			; 0000002fH
 	jne	SHORT $LN22@main
 $LN19@main:
-; Line 443
+; Line 448
 	movsx	eax, BYTE PTR [eax+1]
 	sub	eax, 100				; 00000064H
 	je	SHORT $LN15@main
@@ -1212,32 +1201,32 @@ $LN19@main:
 	je	SHORT $LN13@main
 	sub	eax, 9
 	jne	SHORT $LN6@main
-; Line 461
+; Line 466
 	mov	DWORD PTR _test$[ebp], ebx
-; Line 462
+; Line 467
 	jmp	SHORT $LN22@main
 $LN13@main:
-; Line 455
+; Line 460
 	lea	eax, DWORD PTR _i$[ebp]
 	push	eax
 	push	esi
 	push	edi
 	call	_getparam
 	mov	DWORD PTR _out$[ebp], eax
-; Line 456
+; Line 461
 	jmp	SHORT $LN34@main
 $LN12@main:
-; Line 458
+; Line 463
 	lea	eax, DWORD PTR _i$[ebp]
 	push	eax
 	push	esi
 	push	edi
 	call	_getparam
 	mov	DWORD PTR _pwd$[ebp], eax
-; Line 459
+; Line 464
 	jmp	SHORT $LN34@main
 $LN16@main:
-; Line 446
+; Line 451
 	lea	eax, DWORD PTR _i$[ebp]
 	push	eax
 	push	esi
@@ -1246,58 +1235,58 @@ $LN16@main:
 	mov	DWORD PTR _in$[ebp], eax
 $LN34@main:
 	add	esp, 12					; 0000000cH
-; Line 447
+; Line 452
 	xor	ecx, ecx
 	jmp	SHORT $LN22@main
 $LN14@main:
-; Line 452
+; Line 457
 	mov	DWORD PTR _crypt$[ebp], ecx
-; Line 453
+; Line 458
 	jmp	SHORT $LN22@main
 $LN15@main:
-; Line 449
+; Line 454
 	mov	DWORD PTR _crypt$[ebp], ebx
 $LN22@main:
-; Line 436
+; Line 441
 	inc	DWORD PTR _i$[ebp]
 	cmp	DWORD PTR _i$[ebp], edi
 	jl	SHORT $LL23@main
-; Line 479
+; Line 484
 	cmp	DWORD PTR _test$[ebp], ecx
 	je	SHORT $LN5@main
-; Line 480
+; Line 485
 	call	_run_tests
 	test	eax, eax
 	jne	SHORT $LN1@main
-; Line 481
+; Line 486
 	push	OFFSET ??_C@_0BE@LEPKPCAH@?6?5?5?$FL?5self?9test?5OK?$CB?6?$AA@
 	call	_printf
 	pop	ecx
-; Line 482
+; Line 487
 	jmp	SHORT $LN1@main
 $LN6@main:
-; Line 473
+; Line 478
 	call	_usage
 $LN10@main:
-; Line 464
+; Line 469
 	lea	eax, DWORD PTR _i$[ebp]
 	push	eax
 	push	esi
 	push	edi
 	call	_getparam
-; Line 465
+; Line 470
 	push	eax
 	lea	eax, DWORD PTR _lm$[ebp]
 	push	eax
 	call	_lanman
-; Line 466
+; Line 471
 	push	OFFSET ??_C@_0O@NHJKKPLE@?6MS?5Lanman?5?$DN?5?$AA@
 	call	_printf
 	add	esp, 24					; 00000018H
-; Line 467
+; Line 472
 	xor	esi, esi
 $LL9@main:
-; Line 468
+; Line 473
 	movzx	eax, BYTE PTR _lm$[ebp+esi]
 	push	eax
 	push	OFFSET ??_C@_04JFFKLGJF@?$CF02X?$AA@
@@ -1310,28 +1299,28 @@ $LL9@main:
 $LN1@main:
 	pop	edi
 	pop	esi
-; Line 470
+; Line 475
 	xor	eax, eax
 	pop	ebx
-; Line 489
+; Line 494
 	leave
 	ret	0
 $LN5@main:
-; Line 483
+; Line 488
 	cmp	DWORD PTR _in$[ebp], ecx
 	je	SHORT $LN6@main
 	cmp	DWORD PTR _out$[ebp], ecx
 	je	SHORT $LN6@main
 	cmp	DWORD PTR _pwd$[ebp], ecx
 	je	SHORT $LN6@main
-; Line 484
+; Line 489
 	push	DWORD PTR _crypt$[ebp]
 	push	DWORD PTR _pwd$[ebp]
 	push	DWORD PTR _out$[ebp]
 	push	DWORD PTR _in$[ebp]
 	call	_DES_file
 	add	esp, 16					; 00000010H
-; Line 488
+; Line 493
 	jmp	SHORT $LN1@main
 $LN32@main:
 _main	ENDP
