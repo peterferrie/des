@@ -1,7 +1,7 @@
 
 
 ; DES in x86 assembly
-; 1,088 bytes
+; 1,087 bytes
 ; Odzhan
 
   bits 32
@@ -30,6 +30,9 @@ endstruc
 _permutex:
 permutex:
     pushad
+    
+    ;fldz
+    ;fistp   qword[edi]
     
     xor    eax, eax
     push   edi
@@ -184,10 +187,12 @@ sk_l2:
     mov    edi, ebp
     call   edx               ; permutex
     ; memcpy (k1.v8, k->v8, DES_BLK_LEN);
-    mov    esi, ebx
-    mov    edi, esp
-    movsd
-    movsd
+    fild   qword [ebx]
+    fistp  qword [esp]
+    ;mov    esi, ebx
+    ;mov    edi, esp
+    ;movsd
+    ;movsd
     add    ebp, 8
     ; rnd++
     inc    ecx
