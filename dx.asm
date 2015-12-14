@@ -1,7 +1,7 @@
 
 
 ; DES in x86 assembly
-; 1,087 bytes
+; 1,086 bytes
 ; Odzhan
 
   bits 32
@@ -170,7 +170,8 @@ sk_l1:
     ; permute (shiftkey_permtab, &k1, &k2);
     mov    ebx, esp          ; ebx=k1
     lea    edi, [ebx+8]      ; edi=k2
-    mov    esi, shiftkey_permtab
+    add    esi, (shiftkey_permtab - pc1_permtab)
+    ;mov    esi, shiftkey_permtab
     call   edx               ; permutex
     push   1
     pop    eax
@@ -183,13 +184,16 @@ sk_l1:
     mov    ebx, edi          ; ebx=k1
 sk_l2:
     ; permute (pc2_permtab, k, &ctx->keys[rnd]);
-    mov    esi, pc2_permtab
+    ;mov    esi, pc2_permtab
+    add    esi, (pc2_permtab - shiftkey_permtab)
     mov    edi, ebp
     call   edx               ; permutex
     ; memcpy (k1.v8, k->v8, DES_BLK_LEN);
     fild   qword [ebx]
     fistp  qword [esp]
     add    ebp, 8
+    sub    esi, (shiftkey_permtab - pc1_permtab) + \
+                (pc2_permtab - shiftkey_permtab)
     ; rnd++
     inc    ecx
     cmp    ecx, 16
@@ -339,6 +343,16 @@ e_permtab:
   db  00fh, 010h, 011h, 012h, 013h, 014h, 013h, 014h
   db  015h, 016h, 017h, 018h, 017h, 018h, 019h, 01ah
   db  01bh, 01ch, 01bh, 01ch, 01dh, 01eh, 01fh, 000h
+splitin6bitword_permtab:
+  db  008h,
+  db  03fh, 03fh, 000h, 005h, 001h, 002h, 003h, 004h
+  db  03fh, 03fh, 006h, 00bh, 007h, 008h, 009h, 00ah
+  db  03fh, 03fh, 00ch, 011h, 00dh, 00eh, 00fh, 010h
+  db  03fh, 03fh, 012h, 017h, 013h, 014h, 015h, 016h
+  db  03fh, 03fh, 018h, 01dh, 019h, 01ah, 01bh, 01ch
+  db  03fh, 03fh, 01eh, 023h, 01fh, 020h, 021h, 022h
+  db  03fh, 03fh, 024h, 029h, 025h, 026h, 027h, 028h
+  db  03fh, 03fh, 02ah, 02fh, 02bh, 02ch, 02dh, 02eh
 p_permtab:
   db  004h,
   db  00fh, 006h, 013h, 014h, 01ch, 00bh, 01bh, 010h
@@ -374,24 +388,6 @@ pc1_permtab:
   db  01eh, 016h, 00eh, 006h, 03dh, 035h, 02dh, 025h
   db  01dh, 015h, 00dh, 005h, 03ch, 034h, 02ch, 024h
   db  01ch, 014h, 00ch, 004h, 01bh, 013h, 00bh, 003h
-pc2_permtab:
-  db  006h,
-  db  00dh, 010h, 00ah, 017h, 000h, 004h, 002h, 01bh
-  db  00eh, 005h, 014h, 009h, 016h, 012h, 00bh, 003h
-  db  019h, 007h, 00fh, 006h, 01ah, 013h, 00ch, 001h
-  db  028h, 033h, 01eh, 024h, 02eh, 036h, 01dh, 027h
-  db  032h, 02ch, 020h, 02fh, 02bh, 030h, 026h, 037h
-  db  021h, 034h, 02dh, 029h, 031h, 023h, 01ch, 01fh
-splitin6bitword_permtab:
-  db  008h,
-  db  03fh, 03fh, 000h, 005h, 001h, 002h, 003h, 004h
-  db  03fh, 03fh, 006h, 00bh, 007h, 008h, 009h, 00ah
-  db  03fh, 03fh, 00ch, 011h, 00dh, 00eh, 00fh, 010h
-  db  03fh, 03fh, 012h, 017h, 013h, 014h, 015h, 016h
-  db  03fh, 03fh, 018h, 01dh, 019h, 01ah, 01bh, 01ch
-  db  03fh, 03fh, 01eh, 023h, 01fh, 020h, 021h, 022h
-  db  03fh, 03fh, 024h, 029h, 025h, 026h, 027h, 028h
-  db  03fh, 03fh, 02ah, 02fh, 02bh, 02ch, 02dh, 02eh
 shiftkey_permtab:
   db  007h,
   db  001h, 002h, 003h, 004h, 005h, 006h, 007h, 008h
@@ -401,3 +397,11 @@ shiftkey_permtab:
   db  021h, 022h, 023h, 024h, 025h, 026h, 027h, 028h
   db  029h, 02ah, 02bh, 02ch, 02dh, 02eh, 02fh, 030h
   db  031h, 032h, 033h, 034h, 035h, 036h, 037h, 01ch
+pc2_permtab:
+  db  006h,
+  db  00dh, 010h, 00ah, 017h, 000h, 004h, 002h, 01bh
+  db  00eh, 005h, 014h, 009h, 016h, 012h, 00bh, 003h
+  db  019h, 007h, 00fh, 006h, 01ah, 013h, 00ch, 001h
+  db  028h, 033h, 01eh, 024h, 02eh, 036h, 01dh, 027h
+  db  032h, 02ch, 020h, 02fh, 02bh, 030h, 026h, 037h
+  db  021h, 034h, 02dh, 029h, 031h, 023h, 01ch, 01fh
