@@ -189,10 +189,6 @@ sk_l2:
     ; memcpy (k1.v8, k->v8, DES_BLK_LEN);
     fild   qword [ebx]
     fistp  qword [esp]
-    ;mov    esi, ebx
-    ;mov    edi, esp
-    ;movsd
-    ;movsd
     add    ebp, 8
     ; rnd++
     inc    ecx
