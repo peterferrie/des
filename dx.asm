@@ -1,8 +1,8 @@
 
 
 ; DES in x86 assembly
-; 1,086 bytes
-; Odzhan
+; 1,046 bytes
+; Odzhan and Peter Ferrie
 
   bits 32
 
@@ -42,33 +42,28 @@ permutex:
     
     ; ob=*p++;
     lodsb
-    xchg   eax, ecx
+    xchg   ecx, eax
 p_l1:
-    ; t=0
-    cdq
     push   ecx
-    xor    ebp, ebp
+    mov    cl, 8
 p_l2:
+    push   ecx
     ; x = *p++;
     lodsb
-    ; t <<= 1;
-    add    dl, dl
-    ; 0x80 >> (x % 8)
-    mov    cl, al
-    mov    ch, 80h
+    ; replace (0x80 >> (x % 8)))
+    ; with 1 << (7 - (x % 8))
+    mov    cl, 7
+    sub    cl, al
     and    cl, 7
-    shr    ch, cl
     ; in[x/8];
     shr    al, 3
     xlatb
     ; if (in[x/8] & (0x80 >> (x % 8)))
-    test   al, ch
-    jz     p_l3
-    or     dl, 1
-p_l3:
-    inc    ebp
-    cmp    ebp, 8
-    jnz    p_l2
+    bt     eax, ecx
+    ; t <<= 1;
+    adc    dl, dl
+    pop    ecx
+    loop   p_l2
     xchg   eax, edx
     ; out->v8[i]=t;
     stosb
@@ -93,12 +88,13 @@ des_fx:
     
     ; allocate 16 bytes
     sub    esp, 16
-    lea    ebp, [esp+8] ; ebp has t1
+
+    mov    ebp, permutex
     
     ; permute (e_permtab, x, &t0);
     mov    edi, esp
     mov    esi, e_permtab
-    call   permutex
+    call   ebp
     
     ; put key in esi
     xchg   eax, esi
@@ -110,39 +106,37 @@ des_fx:
     ; permute (splitin6bitword_permtab, &t0, &t1);
     mov    esi, splitin6bitword_permtab
     mov    ebx, esp
-    mov    edi, ebp
-    call   permutex
+    scasd
+    scasd
+    call   ebp
     
-    mov    esi, ebp
+    mov    esi, edi
     mov    ebx, sbox
     push   8
     pop    ecx
-    xor    edx, edx
 df_l2:
-    push   ecx
     lodsb
-    mov    cl, al
     shr    al, 1
+    pushfd
     xlatb
     aam    16
-    test   cl, 1
-    jnz    df_l3
+    popfd
+    jb     df_l3
     mov    al, ah
 df_l3:
     shl    edx, 4
     or     dl, al
     add    ebx, 32
-    pop    ecx
     loop   df_l2
     
     bswap  edx
     
     ; permute (p_permtab, &t, &t0);
+    mov    ebx, edi
     mov    esi, p_permtab
     mov    edi, esp
-    mov    ebx, ebp
     mov    [ebx], edx
-    call   permutex
+    call   ebp
     mov    eax, [edi]
     add    esp, 4*4
     mov    [esp+_eax], eax
@@ -154,7 +148,6 @@ _des_setkeyx:
 des_setkey:
     pushad
     mov    ebx, [esp+32+8]  ; input
-    mov    ebp, [esp+32+4]  ; ctx
     
     ; alloc space for k1, k2
     sub    esp, 16
@@ -166,9 +159,11 @@ des_setkey:
     mov    edi, esp
     call   edx               ; permutex
     xor    ecx, ecx
+    mov    edi, [esp+32+16+4]  ; ctx
 sk_l1:
     ; permute (shiftkey_permtab, &k1, &k2);
     mov    ebx, esp          ; ebx=k1
+    push   edi
     lea    edi, [ebx+8]      ; edi=k2
     add    esi, (shiftkey_permtab - pc1_permtab)
     ;mov    esi, shiftkey_permtab
@@ -186,12 +181,13 @@ sk_l2:
     ; permute (pc2_permtab, k, &ctx->keys[rnd]);
     ;mov    esi, pc2_permtab
     add    esi, (pc2_permtab - shiftkey_permtab)
-    mov    edi, ebp
+    pop    edi
     call   edx               ; permutex
     ; memcpy (k1.v8, k->v8, DES_BLK_LEN);
     fild   qword [ebx]
     fistp  qword [esp]
-    add    ebp, 8
+    scasd
+    scasd
     sub    esi, (shiftkey_permtab - pc1_permtab) + \
                 (pc2_permtab - shiftkey_permtab)
     ; rnd++
@@ -227,13 +223,14 @@ des_encx:
     mov    L, [edi]
     mov    R, [edi+4]
     
-    test   ecx, ecx
-    mov    cl, 16
-    jz     de_l1
+    jecxz  de_l1
     ; if decrypt, advance key and set direction
     add    esi, 15*8
     std
 de_l1:
+    mov    cl, 16
+
+de_l2:
     ; L ^= des_f (&R, key);
     push   R
     mov    eax, esp
@@ -246,7 +243,7 @@ de_l1:
     ; key += ofs;
     lodsd
     lodsd
-    loop   de_l1
+    loop   de_l2
     cld
     
     ; permute (inv_ip_permtab, &t0, out);
@@ -268,27 +265,25 @@ des_str2keyx:
     push   2
     pop    ecx
 s2k_l1:
+    push   ecx
     lodsd
     dec    esi
     bswap  eax
-    xor    ebp, ebp
-    xor    edx, edx
-    cmp    ecx, 1
-    jnz    s2k_l2
+    loop   s2k_l2
     rol    eax, 4
 s2k_l2:
-    mov    ebx, eax
-    and    ebx, 0FE000000h
-    or     edx, ebx
-    rol    edx, 8
+    bswap  eax
+    mov    cl, 4
+    push   ecx
+s2k_l3:
+    shld   edx, eax, 7
+    add    edx, edx
     shl    eax, 7
-    inc    ebp
-    cmp    ebp, 4
-    jnz    s2k_l2
+    loop   s2k_l3
     
     xchg   eax, edx
-    bswap  eax
     stosd
+    pop    ecx
     loop   s2k_l1
     popad
     ret
