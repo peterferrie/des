@@ -307,9 +307,7 @@ s2k_l1:
     loop   s2k_l2
     rol    eax, 4
 s2k_l2:
-    bswap  eax
     mov    cl, 4
-    push   ecx
 s2k_l3:
     shld   edx, eax, 7
     add    edx, edx
@@ -317,12 +315,12 @@ s2k_l3:
     loop   s2k_l3
     
     xchg   eax, edx
+    bswap  eax
     stosd
     pop    ecx
     loop   s2k_l1
     popad
     ret
-  
 sbox:
   ; S-box 1
   db 0E4h, 0D1h, 02Fh, 0B8h, 03Ah, 06Ch, 059h, 007h
