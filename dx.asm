@@ -33,7 +33,7 @@
 ;
 ; http://csrc.nist.gov/publications/fips/fips46-3/fips46-3.pdf
 ;
-; size: 1,046 bytes
+; size: 1,045 bytes
 ;
 ; global calls use cdecl convention
 ;
@@ -304,10 +304,10 @@ s2k_l1:
     lodsd
     dec    esi
     bswap  eax
-    loop   s2k_l2
-    rol    eax, 4
-s2k_l2:
-    mov    cl, 4
+    dec    ecx
+    mov    cl, 4    
+    jnz    s2k_l3
+    rol    eax, cl
 s2k_l3:
     shld   edx, eax, 7
     add    edx, edx
