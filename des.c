@@ -245,7 +245,7 @@ void des_enc (des_ctx *ctx, void *in,
     ofs = -1;
     key += 15;
   }
-  // apply inital permuation to input
+  // apply initial permutation to input
   permute (ip_permtab, in, &t0);
   
   L=t0.v32[0];
@@ -263,7 +263,7 @@ void des_enc (des_ctx *ctx, void *in,
   t0.v32[0]=R;
   t0.v32[1]=L;
   
-  // apply inverse permuation
+  // apply inverse permutation
   permute (inv_ip_permtab, &t0, out);
 }
 

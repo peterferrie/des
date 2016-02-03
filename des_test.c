@@ -149,29 +149,42 @@ int run_tests (void)
 
 void progress (uint64_t fs_complete, uint64_t fs_total)
 {
-  uint32_t total, hours=0, minutes=0, seconds=0, speed=0, avg;
-  uint64_t pct;
-  static uint32_t start=0, current;
+  int           days=0, hours=0, minutes=0;
+  uint64_t      t, pct, speed, seconds=0;
+  static time_t start=0;
   
   if (start==0) {
     start=time(0);
     return;
   }
   
-  pct = (100 * fs_complete) / (1 * fs_total);
+  pct = (100*fs_complete)/fs_total;
   
-  total = (time(0) - start);
+  t = (time(0) - start);
   
-  if (total != 0) {
-    // (remaining data * time elapsed) / data completed
-    avg = (total * (fs_total - fs_complete)) / fs_complete;
-    speed = (fs_complete / total);
+  if (t != 0) {
+    seconds = (fs_total - fs_complete) / (fs_complete / t);
+    speed   = (fs_complete / t);
     
-    minutes = (avg / 60);
-    seconds = (avg % 60);
+    days=0;
+    hours=0;
+    minutes=0;
+    
+    if (seconds>=60) {
+      minutes = (seconds / 60);
+      seconds %= 60;
+      if (minutes>=60) {
+        hours = minutes / 60;
+        minutes %= 60;
+        if (hours>=24) {
+          days = hours/24;
+          hours %= 24;
+        }
+      }
+    }
+  printf ("\rProcessed %llu MB out of %llu MB at %llu MB/s : %llu%% complete. ETA: %03d:%02d:%02d:%02d",
+    fs_complete/1000/1000, fs_total/1000/1000, speed/1000/1000, pct, days, hours, minutes, (int)seconds);
   }
-  printf ("\rProcessed %llu MB out of %llu MB %lu MB/s : %llu%% complete. ETA: %02d:%02d     ",
-    fs_complete/1000/1000, fs_total/1000/1000, speed/1000/1000, pct, minutes, seconds);
 }
 
 void DES_genkey (void *out, char *str) 

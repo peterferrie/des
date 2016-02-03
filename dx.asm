@@ -66,9 +66,6 @@ _permutex:
 permutex:
     pushad
     
-    ;fldz
-    ;fistp   qword[edi]
-    
     xor    eax, eax
     push   edi
     stosd
